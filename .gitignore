@@ -1,0 +1,13 @@
+lib
+data
+bak
+figs
+out
+.*_out
+**.egg-info
+**__pycache__
+**.ipynb_checkpoints
+**.DS_Store
+**~
+**.idea
+**.png
