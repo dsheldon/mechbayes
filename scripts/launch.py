@@ -3,56 +3,91 @@ import argparse
 import pandas as pd
 from pathlib import Path
 import time
+import json
 
+def get_config():
+    try:
+        with open('config.json') as json_file:
+            config = json.load(json_file)
+    except Exception as e:
+        raise Exception("Could not parse config.json. Please check syntax.") from e
+    return config
 
-STATES_AND_US=["US", "AS", "GU", "MP", "PR", "VI", "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
-
-DEFAULT_CONFIGS = ['resample_80_last_10']
-
+DEFAULT_REGION = 'states_and_US'
+DEFAULT_MODELS = ['mb_default']
 TODAY = pd.to_datetime("today").strftime('%Y-%m-%d')
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Launch cluster jobs for MechBayes')
+    parser = argparse.ArgumentParser(description='Launch forecasts')
 
-    # configs
-    parser.add_argument('--configs', nargs="+", help='configs to use (from configs.py)', default=DEFAULT_CONFIGS)
+    # Optionally specify forecast_group from config.json
+    parser.add_argument('--forecast_group', nargs="?", help='forecast group (from config.json)')
 
-    # places
-    parser.add_argument('--places',  nargs="+", help='places to run', default=STATES_AND_US)
-    parser.add_argument('--places_file', help='file with places to run', default=None)
-    parser.add_argument('--num_places', help="use this many places only", type=int, default=None)
-
-    # dates
+    # If forecast_group is not set, the arguments can be specified on the command-line.
+    # (Arguments set here override arguments from config.json)
+    parser.add_argument('--region', help='region to use (see config.json)')    
+    parser.add_argument('--models', nargs="+", help='models to use (see config.json)')
+    parser.add_argument('--places',  nargs="+", help='places to run (overrides region)')
     parser.add_argument('--start', help='start date', default='2020-03-04')
+
+    # These are always specified on the command-line
     parser.add_argument('--forecast_dates', nargs="+", help='forecast dates', default=[TODAY])
     parser.add_argument('--num_sundays', help="use the last n sundays as forecast dates", type=int, default=None)
 
-    # other
-    parser.add_argument('--root', help='root directory for output', default='results1')
+    # Other optional arguments
+    parser.add_argument('--root', help='root directory for output', default='results')
     parser.add_argument('--logdir', help='log directory', default='log')
     parser.add_argument('--no-run', help="don't run the model (only do vis)", dest='run', action='store_false')
+    parser.add_argument('--no-sbatch', help="run locally instead of launching sbatch commands", dest='sbatch', action='store_false')
     parser.add_argument('--sleep', help="time to sleep between sbatch calls", type=float, default=0.1)
     parser.set_defaults(run=True)
+    parser.set_defaults(sbatch=True)
 
     # Parse arguments
     args = parser.parse_args()
 
-    root=args.root
-    log=args.logdir
-    configs=args.configs
+    root = args.root
+    log = args.logdir
 
-    # Get places: use file if specified, else command-line    
-    if args.places_file is not None:
-        with open(args.places_file) as f:
-            places = f.read().splitlines()	
+    models = None
+    region = None
+    start = None
+
+    config = get_config()
+    
+    # Get forecast group configuration arguments
+    if args.forecast_group:
+        forecast_group = args.forecast_group
+        forecast_config = config['forecast_groups'][args.forecast_group]
+        models = forecast_config['models']
+        region = forecast_config['region']
+        start = forecast_config['start']
     else:
+        forecast_group = 'none'
+        
+    # Set arguments based on command-line; overrides forecast_group
+    models = args.models if args.models else models
+    region = args.region if args.region else region
+    start  = args.start  if args.start  else start    
+
+    # Get places
+    if args.places:
         places = args.places
+    elif region:
+        places = config['regions'][region]
+    else:
+        raise ValueError('Must specify forecast_group, region, or places')
 
-    if args.num_places and args.num_places < len(places):
-        places = places[:args.num_places]
+    # Check that models is set either by forecast_group or argument
+    if models is None:
+        raise ValueError("Must specify forecast_group or models")
 
-    # Get dates
+    # Check that start is set
+    if start is None:
+        raise ValueError("Must specify forecast_group or start")
+    
+    # Get forecast dates
     start = args.start
     if args.num_sundays:
         forecast_dates = list(pd.date_range(periods=args.num_sundays, end=TODAY, freq='W').astype(str))        
@@ -61,30 +96,36 @@ if __name__ == "__main__":
         
     extra_args = '' if args.run else '--no-run'
 
-
-    for config in configs:
+    for model in models:
         for forecast_date in forecast_dates:
-            prefix = f'{root}/{config}/{forecast_date}'
+            prefix = f'{root}/{forecast_group}/{model}/{forecast_date}'
             print(f"prefix is {prefix}")
             
             for place in places:
-                name = f'{place}-{forecast_date}-{config}'
-                logdir = f'{log}/{config}/{forecast_date}'
+                
+                name = f'{place}-{forecast_date}-{model}'
+                cmd = f'./run_model.sh "{place}" --start {start} --end {forecast_date} --model {model} --prefix {prefix} {extra_args}'
+                if args.sbatch:
 
-                Path(logdir).mkdir(parents=True, exist_ok=True)
+                    print(f"Launching {name}")
 
-                print(f"launching {name}")
+                    logdir = f'{log}/{forecast_group}/{model}/{forecast_date}'
+                    Path(logdir).mkdir(parents=True, exist_ok=True)
 
-                cmd = f'''sbatch \
---job-name="{name}" \
---output="{logdir}/{place}.out" \
---error="{logdir}/{place}.err" \
---nodes=1 \
---ntasks=1 \
---mem=1000 \
---time=04:00:00 \
---partition=defq \
-./run_model.sh "{place}" --start {start} --end {forecast_date} --config {config} --prefix {prefix} {extra_args}'''
-                                
-                os.system(cmd)
-                time.sleep(args.sleep)
+                    sbatch_cmd = f'sbatch ' \
+                        f'--job-name="{name}" ' \
+                        f'--output="{logdir}/{place}.out" ' \
+                        f'--error="{logdir}/{place}.err" ' \
+                        f'--nodes=1 ' \
+                        f'--ntasks=1 ' \
+                        f'--mem=1000 ' \
+                        f'--time=04:00:00 ' \
+                        f'--partition=defq ' + cmd
+                    
+                    #os.system(sbatch_cmd)
+                    #time.sleep(args.sleep)
+                    #print(sbatch_cmd)
+
+                else:
+                    print(f"Running {name}")
+                    os.system(cmd)
