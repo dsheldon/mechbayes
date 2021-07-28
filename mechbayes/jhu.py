@@ -15,7 +15,7 @@ def load_and_massage(url):
     return df
 
 @cachetools.func.ttl_cache(ttl=600)
-def load_world():
+def load_countries():
 
     sources = {
         'confirmed' : 'https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv',
@@ -66,7 +66,26 @@ def filter_counties(df):
     df = df.loc[~df['Combined_Key'].isin(exclude_counties)].copy()
     
     return df
+
+def get_place_info():
+    '''Get combined metadata data frame for countries, US states, US counties'''
+    country_info = get_country_info()
+    state_info = get_state_info()
+    county_info = get_county_info()
+    return pd.concat([country_info, state_info, county_info], sort=False)
+
+def get_country_info():
+    '''Get country info from JHU location lookup file'''
+
+    url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv'
+    df = pd.read_csv(url)
+    df = df.loc[pd.isnull(df['Province_State'])]
+    df['name'] = df['Country_Region']
+    df['key'] = df['Country_Region']
+    df = df.set_index('key')
     
+    return df
+
 @cachetools.func.ttl_cache(ttl=600)
 def get_county_info():
     '''Get state info from JHU location lookup file'''
@@ -77,9 +96,9 @@ def get_county_info():
     df = filter_counties(df)
 
     # Add county and state columns, and set key to <state abbrev>-<county name>
-    df['name'] = df['Admin2']
+    df['name'] = df['Admin2'] + ', ' + df['Province_State']
     df['state'] = df['Province_State'].replace(states.abbrev)
-    df['key'] = df['state'] + '-' + df['name']
+    df['key'] = df['state'] + '-' + df['Admin2']
     df = df.set_index('key')
     return df
 
@@ -95,6 +114,12 @@ def get_state_info():
     df = df.set_index('key')
     return df
 
+
+def load_us_states():
+    return load_us(counties=False)
+    
+def load_us_counties():
+    return load_us(counties=True)
 
 @cachetools.func.ttl_cache(ttl=600)
 def load_us(counties=False):
@@ -126,7 +151,6 @@ def load_us(counties=False):
             df = filter_counties(df)
             state = df['Province_State'].replace(states.abbrev)
             county = df['Admin2']
-            #county = county.replace({'New York': 'New York City'}) # correct inconsistency with metadata table
             df = df.drop(columns=meta_cols)
             df = df.set_index(state + '-' + county)
 

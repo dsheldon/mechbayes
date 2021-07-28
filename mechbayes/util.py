@@ -37,31 +37,25 @@ Data
 ************************************************************
 """
 
-def load_world_data():
-    # world data
-    world = jhu.load_world()
-    world = world.loc[:,(slice(None), 'tot', slice(None))] # only country totals
+def load_country_data():
 
-    country_names = world.columns.unique(level=0)
-    world_pop_data = pd.read_csv('https://s3.amazonaws.com/rawstore.datahub.io/630580e802a621887384f99527b68f59.csv')
-    world_pop_data = world_pop_data.set_index("Country")
+    countries = jhu.load_countries()
+    info = jhu.get_country_info()
         
-    country_names_valid = set(country_names) & set(world_pop_data.index) 
+    country_names_valid = set(info.index) & set(countries.columns.unique(level=0))
     
-    world_data = {
-        k: {'data' : world[k].tot.copy(), 
-            'pop' : world_pop_data.loc[k]['Year_2016'],
+    country_data = {
+        k: {'data' : countries[k].copy(), 
+            'pop' : info.loc[k, 'Population'],
             'name' : k}
         for k in country_names_valid
     }
-
-    world_data['US'] = {'pop': 328000000,'data':world['US'].tot,'name':'US'}
       
-    return world_data
+    return country_data
 
 def load_state_data():
 
-    US = jhu.load_us()
+    US = jhu.load_us_states()
     info = jhu.get_state_info()
     
     data = {
@@ -75,7 +69,7 @@ def load_state_data():
     return data
 
 def load_county_data():
-    US = jhu.load_us(counties=True)
+    US = jhu.load_us_counties()
     info = jhu.get_county_info()
     
     counties = set(info.index) & set(US.columns.unique(level=0))
@@ -93,9 +87,9 @@ def load_county_data():
 
 def load_data():
     state_data = load_state_data()
-    world_data = load_world_data()
+    country_data = load_country_data()
     county_data = load_county_data()
-    return dict(world_data, **state_data, **county_data)
+    return dict(country_data, **state_data, **county_data)
 
 
 def redistribute(df, date, n, k, col='death'):
