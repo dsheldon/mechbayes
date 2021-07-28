@@ -8,10 +8,8 @@ from . import states
 def load_and_massage(url):
     df = pd.read_csv(url)
     df = df.drop(columns=['Lat', 'Long'])
-    df = df.rename(columns={'Province/State' : 'province', 'Country/Region' : 'country'})    
-    df.province = df.province.replace(states.abbrev)
-    df.province = df.province.fillna('tot')
-    df = df.set_index(['country', 'province'])
+    df = df.rename(columns={'Province/State' : 'province', 'Country/Region' : 'country'})
+    df = df.drop(columns=['province']).groupby('country').sum()
     df = df.T
     df.index = pd.to_datetime(df.index)
     return df
@@ -20,18 +18,18 @@ def load_and_massage(url):
 def load_world():
 
     sources = {
-    'confirmed' : 'https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv',
-    'death' : 'https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'
-}
+        'confirmed' : 'https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv',
+        'death' : 'https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'
+    }
 
     # Load each data file into a dataframe with row index = date, and column index = (country, province)
     d = {key: load_and_massage(url) for key, url in sources.items()}
 
-    # Concatenate data frames: column index is now (variable, country, province)
+    # Concatenate data frames: column index is now (variable, country)
     df = pd.concat(d.values(), axis=1, keys=d.keys())
 
     # Permute order of index to (country, province, variable) and sort the columns by the index value
-    df = df.reorder_levels([1,2,0], axis=1).sort_index(axis=1)
+    df = df.reorder_levels([1,0], axis=1).sort_index(axis=1)
 
     return df
         
