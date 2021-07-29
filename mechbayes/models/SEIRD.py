@@ -40,7 +40,6 @@ class SEIRD(SEIRDBase):
                  death_prob_est=0.01,
                  death_prob_conc=100,
                  forecast_rw_scale = 0.,
-                 drift_scale = None,
                  num_frozen=0,
                  rw_use_last=1,
                  confirmed=None,
@@ -98,11 +97,6 @@ class SEIRD(SEIRDBase):
         death_rate = numpyro.sample("death_rate", 
                                     dist.Gamma(death_rate_shape, death_rate_shape * H_duration_est))
 
-        if drift_scale is not None:
-            drift = numpyro.sample("drift", dist.Normal(loc=0., scale=drift_scale))
-        else:
-            drift = 0.
-
 
         x0 = SEIRDModel.seed(N=N, I=I0, E=E0, H=H0, D=D0)
         numpyro.deterministic("x0", x0)
@@ -131,7 +125,6 @@ class SEIRD(SEIRDBase):
                   sigma, 
                   gamma, 
                   rw_scale, 
-                  drift, 
                   det_prob0, 
                   confirmed_dispersion, 
                   death_dispersion,
@@ -156,7 +149,6 @@ class SEIRD(SEIRDBase):
                       sigma, 
                       gamma, 
                       forecast_rw_scale, 
-                      drift, 
                       det_prob[-rw_use_last:].mean(),
                       confirmed_dispersion, 
                       death_dispersion,
@@ -183,7 +175,6 @@ class SEIRD(SEIRDBase):
         sigma, \
         gamma, \
         rw_scale, \
-        drift, \
         det_prob0, \
         confirmed_dispersion, \
         death_dispersion, \
@@ -200,7 +191,6 @@ class SEIRD(SEIRDBase):
         det_prob = numpyro.sample("det_prob" + suffix,
                                   LogisticRandomWalk(loc=det_prob0, 
                                                      scale=rw_scale, 
-                                                     drift=0.,
                                                      num_steps=T-1))
 
         # Run ODE
