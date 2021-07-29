@@ -10,18 +10,17 @@ import submit
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description='Launch or collect forecasts (named arguments refer to config file)',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        description='Launch or collect forecasts (named arguments refer to config file)'
     )
     
     main_args = parser.add_argument_group("main arguments")
-    main_args.add_argument('--config_file', help='configuration file', default='config.json')
-    main_args.add_argument('--forecast_group', nargs="?", help='name of forecast group')
-    main_args.add_argument('--mode', help="action to take", default="launch", choices=["launch", "collect"])
-    main_args.add_argument('--num_sundays', help="forecast for last n sundays", type=int, default=1)
-    main_args.add_argument('--forecast_dates', nargs="+", help='forecast for specific dates', default=[])    
+    main_args.add_argument('--config_file', help='configuration file (default: config.json)', default='config.json')
+    main_args.add_argument('--mode', help="action to take (default: launch)", default="launch", choices=["launch", "collect"])
+    main_args.add_argument('--forecast_group', help='name of forecast group')
+    main_args.add_argument('--num_sundays', help="forecast for last n sundays", type=int)
+    main_args.add_argument('--forecast_dates', nargs="+", help='forecast for specific dates')    
 
-    override_args = parser.add_argument_group("manually set (or override) forecast group configuration")
+    override_args = parser.add_argument_group("to manually set forecast group configuration options")
     override_args.add_argument('--region', help='region name')    
     override_args.add_argument('--places',  nargs="+", help='places to run (overrides region)')
     override_args.add_argument('--model_configs', nargs="+", help='model configuration names')
@@ -29,19 +28,17 @@ if __name__ == "__main__":
 
 
     # Other optional arguments
-    other_args = parser.add_argument_group("optional arguments")
+    other_args = parser.add_argument_group("other optional arguments")
     other_args.add_argument('--output_dir', help='output directory', default='results')
-    other_args.add_argument('--log_dir', help='log directory', default='log')
-
-    other_args.add_argument('--run', help="run model", dest='run', action='store_true')
+    other_args.add_argument('--run', help="run model (default)", dest='run', action='store_true', default=True)
     other_args.add_argument('--no-run', help="update plots without running model", dest='run', action='store_false')
     other_args.set_defaults(run=True)
 
-    other_args.add_argument('--sbatch', help="launch jobs with sbatch", dest='sbatch', action='store_true')
+    other_args.add_argument('--sbatch', help="launch jobs with sbatch (default)", dest='sbatch', action='store_true')
     other_args.add_argument('--no-sbatch', help="run jobs locally", dest='sbatch', action='store_false')
     other_args.set_defaults(sbatch=True)
-
-    other_args.add_argument('--sleep', help="time to sleep between sbatch calls", type=float, default=0.1)
+    other_args.add_argument('--log_dir', help='log directory for sbatch jobs', default='log')
+    other_args.add_argument('--sleep', help="seconds to sleep between sbatch calls (default: 0.1)", type=float, default=0.1)
 
     '''Get model_configs, region, and start date. 
     
@@ -90,10 +87,9 @@ if __name__ == "__main__":
     if args.num_sundays:
         today = pd.to_datetime("today").strftime('%Y-%m-%d')
         forecast_dates = list(pd.date_range(periods=args.num_sundays, end=today, freq='W').astype(str))
-    else:
+    elif args.forecast_dates:
         forecast_dates = args.forecast_dates
-
-    if not forecast_dates:
+    else:
         raise ValueError("must specify either --forecast_dates or --num_sundays")
         
     # Other arguments
