@@ -3,7 +3,6 @@ import argparse
 import pandas as pd
 from pathlib import Path
 import time
-import run
 
 from vis_util import install_vis
 from submit_util import create_submission_file
@@ -51,7 +50,7 @@ if __name__ == "__main__":
     model_config_names = None
     region = None
     start = None
-    config = run.load_config(args.config_file)
+    config = load_config(args.config_file)
     
     # Get forecast group configuration arguments
     if args.forecast_group:
