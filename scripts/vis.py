@@ -9,7 +9,7 @@ def install_vis(prefix, places):
     here = Path(__file__).parent.resolve()
     
     # Copy index.html file
-    src = f"{here}/vis/index.html";
+    src = f"{here}/resources/vis/index.html";
     dst = f"{prefix}/vis/index.html";
     os.system(f"cp {src} {dst}");
 
