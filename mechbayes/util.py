@@ -1,7 +1,6 @@
 import sys
 
 from . import jhu
-from . import states
 
 import mechbayes.models.SEIRD
 
@@ -41,29 +40,31 @@ def load_country_data():
 
     countries = jhu.load_countries()
     info = jhu.get_country_info()
-        
-    country_names_valid = set(info.index) & set(countries.columns.unique(level=0))
+    
+    names = set(info.index) & set(countries.columns.unique(level=0))
     
     country_data = {
         k: {'data' : countries[k].copy(), 
             'pop' : info.loc[k, 'Population'],
-            'name' : k}
-        for k in country_names_valid
+            'name' : info.loc[k, 'name']}
+        for k in names
     }
       
     return country_data
 
 def load_state_data():
 
-    US = jhu.load_us_states()
+    states = jhu.load_us_states()
     info = jhu.get_state_info()
-    
+
+    names = set(info.index) & set(states.columns.unique(level=0))
+
     data = {
-        k : {'data': US[k].copy(), 
+        k : {'data': states[k].copy(), 
              'pop': info.loc[k, 'Population'],
-             'name': states.states_territories[k]
+             'name': info.loc[k, 'name']
             }
-        for k in info.index
+        for k in names
     }
     
     return data

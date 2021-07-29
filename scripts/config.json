@@ -1,8 +1,8 @@
 {
-    "models" : {
+    "model_configs" : {
         
-        "mb_default": {
-            "model": "covid.models.SEIRD_incident.SEIRD",
+        "llonger_H_fix": {
+            "model": "mechbayes.models.SEIRD.SEIRD",
             "args"  : {
                 "gamma_shape":  1000,
                 "sigma_shape":  1000,
@@ -14,7 +14,7 @@
         },
 
         "frozen_21": {
-            "model": "covid.models.SEIRD_incident.SEIRD",
+            "model": "mechbayes.models.SEIRD.SEIRD",
             "args"  : {
                 "gamma_shape":  1000,
                 "sigma_shape":  1000,
@@ -29,14 +29,16 @@
 
     "regions" : {
 
-        "test": ["US", "AS"],
+        "test_region": ["US", "AS"],
         
-        "states_and_US": ["US", "AS", "GU", "MP", "PR", "VI", "AL", "AK", "AZ", "AR",
-                          "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL",
-                          "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN",
-                          "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC",
-                          "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX",
-                          "UT", "VT", "VA", "WA", "WV", "WI", "WY"],
+        "US_and_states": ["US",
+                          "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+                          "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+                          "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+                          "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+                          "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+                          "DC",
+                          "AS", "GU", "MP", "PR", "VI"],
 
         "EU": ["Belgium", "Bulgaria", "Czechia", "Denmark", "Germany", "Estonia",
                "Ireland", "Greece", "Spain", "France", "Croatia", "Italy", "Cyprus",
@@ -49,28 +51,56 @@
 
     "forecast_groups": {
        
-        "test": {
-            "region": "test",
+        "test_forecast_group": {
+            "region": "test_region",
             "start" : "2020-03-04",
-            "models" : ["llonger_H_fix", "frozen_21"],
+            "horizon": 28,
+            "model_configs" : ["llonger_H_fix", "frozen_21"],
             "submit" : true,
-            "submit_args" : {}
+            "submit_args": {
+                "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.45, 0.50,
+                              0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
+                "targets" : ["inc death", "cum death"],
+                "num_weeks" : 4,
+                "location_codes" : "US Forecast Hub",
+                "team_name" : "UMass",
+                "model_name" : "MechBayes"
+            }
         },
 
         "US": {
-            "region": "states_and_US",
+            "region": "US_and_states",
             "start" : "2020-03-04",
-            "models" : ["llonger_H_fix", "frozen_21"],
+            "horizon": 28,
+            "model_configs" : ["llonger_H_fix", "frozen_21"],
             "submit" : true,
-            "submit_args" : {}
+            "submit_args": {
+                "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.45, 0.50,
+                              0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
+                "num_weeks" : 4,
+                "targets" : ["inc death", "cum death"],
+                "location_codes" : "US Forecast Hub",
+                "team_name" : "UMass",
+                "model_name" : "MechBayes"
+
+            }
         },
 
         "EU": {
             "region" : "EU",
             "start"  : "2020-03-04",
-            "models" : ["llonger_H_fix", "frozen_21"],
+            "horizon" : 28,
+            "model_configs" : ["llonger_H_fix", "frozen_21"],
             "submit" : true,
-            "submit_args" : {}
+            "submit_args": {
+                "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.45, 0.50,
+                              0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
+                "num_weeks" : 4,
+                "targets" : ["inc case", "cum case", "inc death", "cum death"],
+                "location_codes" : "EU Forecast Hub",
+                "team_name" : "UMass",
+                "model_name" : "MechBayes"                
+            }
         }
     }
 }

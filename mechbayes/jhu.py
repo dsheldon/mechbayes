@@ -32,39 +32,15 @@ def load_countries():
     df = df.reorder_levels([1,0], axis=1).sort_index(axis=1)
 
     return df
-        
-@cachetools.func.ttl_cache(ttl=600)
-def get_fips_codes():
-    '''Get valid FIPS codes from covid19forecasthub'''
-    url = 'https://raw.githubusercontent.com/reichlab/covid19-forecast-hub/master/data-locations/locations.csv'
-    df = pd.read_csv(url)
-
-    fips_codes = df['location']
-    fips_codes = fips_codes.loc[fips_codes != 'US'].astype(int)
-    return fips_codes
 
 def filter_counties(df):
-    '''Filter rows from JHU data schema to counties represented in forecast hub'''
-    fips_codes = get_fips_codes()
-    
-#     exclude_counties = ['Kings, New York, US', 
-#                         'Queens, New York, US', 
-#                         'Bronx, New York, US', 
-#                         'Richmond, New York, US']
+    '''Filter to valid counties'''
 
-    exclude_counties = []
-    
     # Subset to locations: 
     #   (1) in US,
-    #   (2) with county name, 
-    #   (3) with FIPS code recognized by forecast hub
-    #   (4) not in list of NYC counties with no data on JHU
+    #   (2) with county name
     
     df = df.loc[(df['iso2']=='US') & (df['Admin2']) & (df['FIPS'])].copy()
-    df['FIPS'] = df['FIPS'].astype(int)
-    df = df.loc[df['FIPS'].isin(fips_codes)].copy()
-    df = df.loc[~df['Combined_Key'].isin(exclude_counties)].copy()
-    
     return df
 
 def get_place_info():
@@ -78,7 +54,7 @@ def get_country_info():
     '''Get country info from JHU location lookup file'''
 
     url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv'
-    df = pd.read_csv(url)
+    df = pd.read_csv(url, dtype={'FIPS': object})
     df = df.loc[pd.isnull(df['Province_State'])]
     df['name'] = df['Country_Region']
     df['key'] = df['Country_Region']
@@ -91,8 +67,7 @@ def get_county_info():
     '''Get state info from JHU location lookup file'''
     
     url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv'
-    df = pd.read_csv(url)
-    
+    df = pd.read_csv(url, dtype={'FIPS': object})
     df = filter_counties(df)
 
     # Add county and state columns, and set key to <state abbrev>-<county name>
@@ -107,8 +82,9 @@ def get_state_info():
     '''Get state info from JHU location lookup file'''
     
     url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv'
-    df = pd.read_csv(url)
-    df = df.loc[df['FIPS'] <= 78].copy()
+    df = pd.read_csv(url, dtype={'FIPS': object})
+    df = df.loc[~df['FIPS'].isnull()]
+    df = df.loc[df['FIPS'].astype('int') <= 78].copy() # remove counties and others
     df['name'] = df['Province_State']
     df['key'] = df['Province_State'].replace(states.abbrev)
     df = df.set_index('key')
