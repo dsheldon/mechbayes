@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
 import mechbayes.util as util
+import mechbayes.jhu as jhu
+from pathlib import Path
 
 '''Submission'''
-def create_submission_file(prefix, forecast_date, model_config, places, submit_args):
+def create_submission_file(prefix, forecast_date, model, places, submit_args):
     
     print(f"Creating submission file in {prefix}")
     samples_directory = f"{prefix}/samples"
@@ -14,11 +16,6 @@ def create_submission_file(prefix, forecast_date, model_config, places, submit_a
     quantiles = submit_args["quantiles"]
     targets_to_run = submit_args["targets"]
 
-    # Get a dummy model instance used to extract variables from samples files
-    model_config_obj = get_model_config(model_config)
-    model_constructor = import_module_and_get_method(model_config_obj['model'])
-    model = model_constructor()
-    
     forecast_df = pd.DataFrame()
 
     forecast_date = pd.to_datetime(forecast_date)
@@ -73,7 +70,7 @@ def resample_to_weekly(daily_df, target):
 
 def get_location_codes():
 
-    resource_dir = get_resource_dir()
+    resource_dir = (Path(__file__).parent / "resources").resolve()
 
     '''Get US codes'''
     df = pd.read_csv(f"{resource_dir}/locations.csv")
@@ -82,6 +79,7 @@ def get_location_codes():
     has_abbrev = ~ df['abbreviation'].isnull()
     state_and_us_codes = {abbrev : code for abbrev, code in zip(df.loc[has_abbrev, 'abbreviation'], 
                                                                 df.loc[has_abbrev, 'location'])}
+    
     # for counties, do a merge on FIPS to subset to counties that are recognized by the hub
     #   use the index from jhu.county_info() as keys
     #   use FIPS column from JHU as location code (it is identical to location column from forecast hub)
@@ -98,6 +96,12 @@ def get_location_codes():
     return dict(state_and_us_codes, **us_county_codes, **eu_country_codes)
 
 
+# mapping from hub target names to mechbayes variable names
+target2var = {'inc case' : 'dy',
+              'cum case' : 'y',
+              'inc death' : 'dz',
+              'cum death' : 'z'};
+
 def generate_forecast_df(forecast_date,
                          model,
                          target,
@@ -108,13 +112,7 @@ def generate_forecast_df(forecast_date,
 
     forecast_start = forecast_date #+ pd.Timedelta("1d")
 
-    # mapping from hub target names to mechbayes variable names
-    target2var = {'inc case' : 'dy',
-                  'cum case' : 'y',
-                  'inc death' : 'dz',
-                  'cum death' : 'z'};
-
-    variable = target2var[target];
+    variable_name = target2var[target];
     
     # empty forecast data structure
     forecast = {'quantile': [],
@@ -132,7 +130,7 @@ def generate_forecast_df(forecast_date,
         prior_samples, mcmc_samples, post_pred_samples, forecast_samples = \
             util.load_samples(f"{samples_directory}/{place}.npz")
         
-        forecast_samples = model.get(forecast_samples, variable, forecast=True)
+        forecast_samples = model.get(forecast_samples, variable_name, forecast=True)
         
         daily_df = construct_daily_df(forecast_start, forecast_samples, target)
         
