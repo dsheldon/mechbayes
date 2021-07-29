@@ -5,7 +5,7 @@ import sys
 import argparse
 import covid.util as util
 import numpy as onp
-import run
+from run_util import load_config, import_module_and_get_method
 
 #test
 
@@ -27,9 +27,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    config = run.load_config(args.config_file)
+    config = load_config(args.config_file)
     model_config = config['model_configs'][args.model_config]
-    model_type = run.import_module_and_get_method(model_config['model'])
+    model_type = get_method(model_config['model'])
     
     data = util.load_data()
 

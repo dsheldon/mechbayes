@@ -4,8 +4,10 @@ import pandas as pd
 from pathlib import Path
 import time
 import run
-import vis
-import submit
+
+from vis_util import install_vis
+from submit_util import create_submission_file
+from run_util import load_config, get_method
 
 if __name__ == "__main__":
 
@@ -133,21 +135,21 @@ if __name__ == "__main__":
             elif args.mode == "collect":
                 
                 # Install visualization
-                vis.install_vis(prefix, places)
+                install_vis(prefix, places)
 
                 # Create submission file
                 if forecast_config['submit']:
 
                     # Get dummy model instance to extract variables from samples files
                     model_config = config['model_configs'][model_config_name]
-                    model_type = run.import_module_and_get_method(model_config['model'])
+                    model_type = get_method(model_config['model'])
                     model = model_type()
                     
-                    submit.create_submission_file(prefix,
-                                                  forecast_date,
-                                                  model,
-                                                  places,
-                                                  forecast_config['submit_args'])
+                    create_submission_file(prefix,
+                                           forecast_date,
+                                           model,
+                                           places,
+                                           forecast_config['submit_args'])
                 
             else:
                 raise ValueError(f"Invalid mode: {args.mode}")
