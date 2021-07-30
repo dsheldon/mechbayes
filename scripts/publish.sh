@@ -1,10 +1,13 @@
 #!/bin/bash
 
-DIR=${1:-results}
-PLACES=${2:-../vis/states.js}
-echo $DIR
-echo $PLACES
+ROOT=$1
+SUBDIR=$2
+DST=${3:-/var/www/html/covid/}
 
-find -L $DIR -name "vis" -exec cp ../vis/index.html {} \; -exec cp $PLACES {}/places.js \;
+if [[ $# -lt 2 ]] ; then
+    echo 'Two arguments required: root directory and subdirectory relative to root'
+    exit 1
+fi
 
-rsync -avz --exclude="*samples*" $DIR/ doppler:/var/www/html/covid/$DIR/
+ssh doppler mkdir -p $DST
+rsync -avz --relative --exclude="*samples*" $ROOT/./$SUBDIR/ doppler:$DST/

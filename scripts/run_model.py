@@ -3,7 +3,7 @@ numpyro.enable_x64()
 
 import sys
 import argparse
-import covid.util as util
+import mechbayes.util as util
 import numpy as onp
 from run_util import load_config, get_method
 

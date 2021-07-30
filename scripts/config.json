@@ -9,9 +9,7 @@
                 "resample_high": 80,
                 "rw_use_last": 10,
                 "rw_scale": 1e-1,
-                "H_duration_est": 25.0,
-                "num_warmup" : 100,
-                "num_samples": 100
+                "H_duration_est": 25.0
             }
         },
 
@@ -23,9 +21,7 @@
                 "resample_high": 80,
                 "rw_use_last": 10,
                 "rw_scale": 1e-1,
-                "H_duration_est": 25.0,
-                "num_warmup" : 100,
-                "num_samples": 100
+                "H_duration_est": 25.0
             }
         },
 
@@ -38,9 +34,7 @@
                 "rw_use_last": 10,
                 "rw_scale": 1e-1,
                 "H_duration_est": 25.0,
-                "num_frozen": 21,
-                "num_warmup" : 100,
-                "num_samples": 100
+                "num_frozen": 21
             }
         }
     },
