@@ -16,6 +16,8 @@ if __name__ == "__main__":
     
     main_args = parser.add_argument_group("main arguments")
     main_args.add_argument('--config_file', help='configuration file (default: config.json)', default='config.json')
+    main_args.add_argument('--output_dir', help='output directory')
+
     main_args.add_argument('--mode', help="action to take (default: launch)", default="launch", choices=["launch", "collect"])
     main_args.add_argument('--forecast_group', help='name of forecast group')
     main_args.add_argument('--num_sundays', help="forecast for last n sundays", type=int)
@@ -30,7 +32,6 @@ if __name__ == "__main__":
 
     # Other optional arguments
     other_args = parser.add_argument_group("other optional arguments")
-    other_args.add_argument('--output_dir', help='output directory', default='results')
     other_args.add_argument('--run', help="run model (default)", dest='run', action='store_true', default=True)
     other_args.add_argument('--no-run', help="update plots without running model", dest='run', action='store_false')
     other_args.set_defaults(run=True)
@@ -51,6 +52,10 @@ if __name__ == "__main__":
     region = None
     start = None
     config = load_config(args.config_file)
+    
+    output_dir = args.output_dir
+    if not output_dir:
+        raise ValueError("--output_dir is required")
     
     # Get forecast group configuration arguments
     if args.forecast_group:
@@ -94,7 +99,6 @@ if __name__ == "__main__":
         raise ValueError("must specify either --forecast_dates or --num_sundays")
         
     # Other arguments
-    output_dir = args.output_dir
     log_root = args.log_dir
     extra_args = '' if args.run else '--no-run'
 
