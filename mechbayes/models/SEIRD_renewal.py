@@ -30,7 +30,7 @@ def Geometric1(mu):
         return np.where(k > 0, (k-1) * log_1_minus_p + log_p, -np.inf)
     return log_prob
 
-def simulate_SEIRD_renewal(self, x0, N, T, theta, CONV_WIDTH=80):
+def simulate_SEIRD_renewal(x0, N, T, theta, CONV_WIDTH=80):
 
     beta, sigma, gamma, death_prob, death_rate = theta
 
@@ -92,11 +92,13 @@ def simulate_SEIRD_renewal(self, x0, N, T, theta, CONV_WIDTH=80):
     '''Calculate other variables from incident exposures via convolutions'''
     dI = np.convolve(dE, U_pmf, mode='full')[:T]             # incident infections
     dH = np.convolve(death_prob*dI, V_pmf, mode='full')[:T]  # entries into first compartment of death pathway
-    dD = np.convolve(dH, D_pmf, mode='full')[:T]              # incident deaths
+    dD = np.convolve(dH, D_pmf, mode='full')[:T]             # incident deaths
 
     # NOTE: could eliminate dH by modifying D_pmf by convolving with V_pmf
 
-    return (dI,dD) 
+    # print(f"T={T}, len(dI)={len(dI)}, len(dE)={len(dE)}")
+    
+    return (dI, dD) 
 
 
 """
@@ -218,8 +220,12 @@ class SEIRD(SEIRDBase):
                   death_prob, 
                   death_rate, 
                   det_prob_d)
+        
+        
+        #print(f"T-1={T-1}, len(confirmed)={len(confirmed)}")
 
-        beta, det_prob, y, z = self.dynamics(T, 
+
+        beta, det_prob, y, z = self.dynamics(T-1, 
                                              params, 
                                              x0,
                                              N,
@@ -233,7 +239,7 @@ class SEIRD(SEIRDBase):
 
         if T_future > 0:
 
-            params = (np.append(beta,np.repeat(beta[-rw_use_last:].mean(),T_future+1)), 
+            params = (np.append(beta,np.repeat(beta[-rw_use_last:].mean(), T_future)), 
                       sigma, 
                       gamma, 
                       forecast_rw_scale, 
@@ -244,12 +250,12 @@ class SEIRD(SEIRDBase):
                       death_rate, 
                       det_prob_d)
 
-            beta_f, det_rate_rw_f, y_f, z_f = self.dynamics(T + T_future + 1,
-                                                                 params,
-                                                                 x0,
-                                                                 N,
-                                                                 suffix = "_future",
-                                                                 num_obs = T_future)
+            beta_f, det_rate_rw_f, y_f, z_f = self.dynamics(T + T_future - 1,
+                                                            params,
+                                                            x0,
+                                                            N,
+                                                            suffix = "_future",
+                                                            num_obs = T_future)
 
             y = np.append(y, y_f)
             z = np.append(z, z_f)
@@ -271,6 +277,10 @@ class SEIRD(SEIRDBase):
         death_rate, \
         det_prob_d = params
 
+        
+        if num_obs is None:
+            num_obs = T
+        
         rw = frozen_random_walk("rw" + suffix,
                                 num_steps=T-1,
                                 num_frozen=num_frozen)
@@ -280,29 +290,24 @@ class SEIRD(SEIRDBase):
         det_prob = numpyro.sample("det_prob" + suffix,
                                   LogisticRandomWalk(loc=det_prob0, 
                                                      scale=rw_scale, 
-                                                     num_steps=T-1))
+                                                     num_steps=T))
 
         # Run ODE
         theta = (beta, sigma, gamma, death_prob, death_rate) 
-        new_cases,new_deaths = self.simulate_SEIRD_renewal(x0[1], N, T, theta, CONV_WIDTH=80)
+        new_cases, new_deaths = simulate_SEIRD_renewal(x0[1], N, T, theta, CONV_WIDTH=80)
 
         # Don't let incident cases/deaths be exactly zero (or worse, negative!)
-        # new_cases = np.maximum(new_cases[1:], 0.1)
-        # new_deaths = np.maximum(new_deaths[1:], 0.1)
+        new_cases = np.maximum(new_cases, 0.1)
+        new_deaths = np.maximum(new_deaths, 0.1)
  
+        #print(f"len(new_cases)={len(new_cases)}, len(det_prob)={len(det_prob)}, len(confirmed)={len(confirmed)}")
+
         # Noisy observations
         with numpyro.handlers.scale(scale=0.5):
-            if suffix != "_future":
-                 y = observe_nb2("dy" + suffix, new_cases, det_prob, confirmed_dispersion, obs = confirmed)
-            else:
-                 y = observe_nb2("dy" + suffix, new_cases[-T_future:], det_prob[-T_future:], confirmed_dispersion, obs = confirmed)
-
+            y = observe_nb2("dy" + suffix, new_cases[-num_obs:], det_prob[-num_obs:], confirmed_dispersion, obs = confirmed)
 
         with numpyro.handlers.scale(scale=2.0):
-            if suffix != "_future":
-                z = observe_nb2("dz" + suffix, new_deaths, det_prob_d, death_dispersion, obs = death)  
-            else:
-                z = observe_nb2("dz" + suffix, new_deaths[-T_future:], det_prob_d, death_dispersion, obs = death)
+            z = observe_nb2("dz" + suffix, new_deaths[-num_obs:], det_prob_d, death_dispersion, obs = death)
 
         return beta, det_prob, y, z
     

@@ -1,6 +1,20 @@
 {
     "model_configs" : {
         
+        "renewal": {
+            "model": "mechbayes.models.SEIRD_renewal.SEIRD",
+            "args"  : {
+                "gamma_shape":  1000,
+                "sigma_shape":  1000,
+                "resample_high": 80,
+                "rw_use_last": 10,
+                "rw_scale": 1e-1,
+                "H_duration_est": 25.0,
+                "num_warmup" : 100,
+                "num_samples": 100
+            }
+        },
+
         "llonger_H_fix": {
             "model": "mechbayes.models.SEIRD.SEIRD",
             "args"  : {
@@ -10,8 +24,8 @@
                 "rw_use_last": 10,
                 "rw_scale": 1e-1,
                 "H_duration_est": 25.0,
-                "num_warmup" : 10,
-                "num_samples": 10
+                "num_warmup" : 100,
+                "num_samples": 100
             }
         },
 
@@ -25,8 +39,8 @@
                 "rw_scale": 1e-1,
                 "H_duration_est": 25.0,
                 "num_frozen": 21,
-                "num_warmup" : 10,
-                "num_samples": 10
+                "num_warmup" : 100,
+                "num_samples": 100
             }
         }
     },
@@ -59,7 +73,7 @@
             "region": "test_region",
             "start" : "2020-03-04",
             "horizon": 28,
-            "model_configs" : ["llonger_H_fix", "frozen_21"],
+            "model_configs" : ["renewal"],
             "submit" : true,
             "submit_args": {
                 "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.45, 0.50,
@@ -76,7 +90,7 @@
             "region": "US_and_states",
             "start" : "2020-03-04",
             "horizon": 28,
-            "model_configs" : ["llonger_H_fix", "frozen_21"],
+            "model_configs" : ["renewal", "llonger_H_fix", "frozen_21"],
             "submit" : true,
             "submit_args": {
                 "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.45, 0.50,

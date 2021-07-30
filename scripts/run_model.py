@@ -5,7 +5,7 @@ import sys
 import argparse
 import covid.util as util
 import numpy as onp
-from run_util import load_config, import_module_and_get_method
+from run_util import load_config, get_method
 
 #test
 
