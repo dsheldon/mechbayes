@@ -139,11 +139,10 @@ class SEIRD(SEIRDBase):
         '''        
                 
         # Sample initial number of infected individuals
-        I0 = numpyro.sample("I0", dist.Uniform(0, 1e-4*N))  # change to 1e-3 if starting on 2020-03-16
+        seed_length = 20;
+        dE_history = numpyro.sample("dE_history", dist.Uniform(0, 1e-4*N*np.ones(seed_length)));
+        
         E0 = numpyro.sample("E0", dist.Uniform(0, 1e-4*N))  # change to 1e-3 if starting on 2020-03-16
-        H0 = numpyro.sample("H0", dist.Uniform(0, 1e-4*N))
-        D0 = numpyro.sample("D0", dist.Uniform(0, 1e-4*N))
-
 
         # Sample dispersion parameters around specified values
 
@@ -194,7 +193,7 @@ class SEIRD(SEIRDBase):
         if confirmed is None:
             confirmed0, confirmed = (None, None)
         else:
-            confirmed0 = confirmed[0]
+            confirmed0 = confirmed[0]  # this is cumulative number of cases by start date
             confirmed = clean_daily_obs(onp.diff(confirmed))
             
         if death is None:
@@ -227,7 +226,7 @@ class SEIRD(SEIRDBase):
 
         beta, det_prob, y, z = self.dynamics(T-1, 
                                              params, 
-                                             x0,
+                                             dE_history,
                                              N,
                                              num_frozen = num_frozen,
                                              confirmed = confirmed,
@@ -252,7 +251,7 @@ class SEIRD(SEIRDBase):
 
             beta_f, det_rate_rw_f, y_f, z_f = self.dynamics(T + T_future - 1,
                                                             params,
-                                                            x0,
+                                                            dE_history,
                                                             N,
                                                             suffix = "_future",
                                                             num_obs = T_future)
@@ -297,8 +296,8 @@ class SEIRD(SEIRDBase):
         new_cases, new_deaths = simulate_SEIRD_renewal(x0[1], N, T, theta, CONV_WIDTH=80)
 
         # Don't let incident cases/deaths be exactly zero (or worse, negative!)
-        new_cases = np.maximum(new_cases, 0.1)
-        new_deaths = np.maximum(new_deaths, 0.1)
+        #new_cases = np.maximum(new_cases, 0.01)
+        #new_deaths = np.maximum(new_deaths, 0.01)
  
         #print(f"len(new_cases)={len(new_cases)}, len(det_prob)={len(det_prob)}, len(confirmed)={len(confirmed)}")
 
