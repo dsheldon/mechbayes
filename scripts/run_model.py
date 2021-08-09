@@ -6,8 +6,7 @@ import argparse
 import mechbayes.util as util
 import numpy as onp
 from run_util import load_config, get_method
-
-#test
+import data_cleaning
 
 if __name__ == "__main__":
 
@@ -32,6 +31,7 @@ if __name__ == "__main__":
     model_type = get_method(model_config['model'])
     
     data = util.load_data()
+    data_cleaning.clean(data)
 
     if args.run:
         util.run_place(data,
