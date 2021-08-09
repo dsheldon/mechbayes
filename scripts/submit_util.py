@@ -3,6 +3,7 @@ import pandas as pd
 import mechbayes.util as util
 import mechbayes.jhu as jhu
 from pathlib import Path
+import warnings
 
 '''Submission'''
 def create_submission_file(prefix, forecast_date, model, places, submit_args):
@@ -19,20 +20,30 @@ def create_submission_file(prefix, forecast_date, model, places, submit_args):
     forecast_df = pd.DataFrame()
 
     forecast_date = pd.to_datetime(forecast_date)
-    
+
+    has_any_missing = False
+
     for target in targets_to_run:
-        target_df = generate_forecast_df(forecast_date,
-                                         model,
-                                         target,
-                                         places,
-                                         quantiles,
-                                         num_weeks,
-                                         samples_directory)
+        target_df, has_missing_place = generate_forecast_df(forecast_date,
+                                                            model,
+                                                            target,
+                                                            places,
+                                                            quantiles,
+                                                            num_weeks,
+                                                            samples_directory)
+
+        has_any_missing = has_any_missing or has_missing_place
 
         forecast_df =  forecast_df.append(target_df)
 
     forecast_date_str = forecast_date.strftime('%Y-%m-%d')
-    fname = f"{prefix}/{forecast_date_str}-{team_name}-{model_name}.csv"
+
+    if has_any_missing:
+        fname = f"{prefix}/{forecast_date_str}-{team_name}-{model_name}-error.csv"
+        warnings.warn(f"Submission file incomplete. Writing partial file to {fname}")
+    else:
+        fname = f"{prefix}/{forecast_date_str}-{team_name}-{model_name}.csv"
+
     forecast_df.to_csv(fname, float_format="%.0f", index=False)
 
 
@@ -125,10 +136,16 @@ def generate_forecast_df(forecast_date,
     forecast["forecast_date"] = forecast_date
     next_saturday = pd.Timedelta('6 days')
 
+    has_missing_place = False
+
     for place in places:
-        # read_samples  
-        prior_samples, mcmc_samples, post_pred_samples, forecast_samples = \
-            util.load_samples(f"{samples_directory}/{place}.npz")
+        try:
+            prior_samples, mcmc_samples, post_pred_samples, forecast_samples = \
+                util.load_samples(f"{samples_directory}/{place}.npz")
+        except Exception as e:
+            warnings.warn(f"Failed to load data: {samples_directory}/{place}.npz")
+            has_missing_place = True
+            continue
         
         forecast_samples = model.get(forecast_samples, variable_name, forecast=True)
         
@@ -165,4 +182,4 @@ def generate_forecast_df(forecast_date,
     location_codes = get_location_codes()
     forecast_df['location'] = forecast_df['location'].replace(location_codes)
 
-    return forecast_df
+    return forecast_df, has_missing_place

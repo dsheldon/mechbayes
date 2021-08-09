@@ -4,10 +4,11 @@ from pathlib import Path
 
 '''Utilities for web visualization'''
 def install_vis(prefix, places):
+
     print(f"Installing vis in {prefix}")
 
     here = Path(__file__).parent.resolve()
-    
+
     # Copy index.html file
     src = f"{here}/resources/vis/index.html";
     dst = f"{prefix}/vis/index.html";
@@ -18,4 +19,3 @@ def install_vis(prefix, places):
     json = info[info.index.isin(places)]['name'].to_json(orient='index')
     with open(f"{prefix}/vis/places.js", "w") as f:
         f.write(f'var places={json};')
-

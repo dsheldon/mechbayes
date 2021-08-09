@@ -3,6 +3,7 @@ import argparse
 import pandas as pd
 from pathlib import Path
 import time
+import warnings
 
 from vis_util import install_vis
 from submit_util import create_submission_file
@@ -142,21 +143,41 @@ if __name__ == "__main__":
             elif args.mode == "collect":
                 
                 # Install visualization
-                install_vis(prefix, places)
+                try:
+                    install_vis(prefix, places)
+                except Exception as e:
+                    print(f"failed to install vis. Exception is\n{str(e)}")
+
 
                 # Create submission file
                 if forecast_config['submit']:
 
-                    # Get dummy model instance to extract variables from samples files
-                    model_config = config['model_configs'][model_config_name]
-                    model_type = get_method(model_config['model'])
-                    model = model_type()
-                    
-                    create_submission_file(prefix,
-                                           forecast_date,
-                                           model,
-                                           places,
-                                           forecast_config['submit_args'])
+                    try:
+                        # Get dummy model instance to extract variables from samples files
+                        model_config = config['model_configs'][model_config_name]
+                        model_type = get_method(model_config['model'])
+                        model = model_type()
+
+                        create_submission_file(prefix,
+                                               forecast_date,
+                                               model,
+                                               places,
+                                               forecast_config['submit_args'])
+                    except Exception as e:
+                        print(f"failed to create submission file. Exception is\n{str(e)}")
                 
+
+                # Publish to web server 
+                if forecast_config['publish']:
+                    print(f"Publishing to web server")
+                    try:
+                        publish_args = forecast_config['publish_args']
+                        host = publish_args['host']
+                        dest = publish_args['dest']
+                        cmd = f"./publish.sh {output_dir} {forecast_group}/{model_config_name} {host} {dest}"
+                        os.system(cmd)
+                        
+                    except Exception as e:
+                        warnings.warn("Failed to publish to web server")
             else:
                 raise ValueError(f"Invalid mode: {args.mode}")
