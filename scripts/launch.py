@@ -18,7 +18,7 @@ if __name__ == "__main__":
     main_args.add_argument('--config_file', help='configuration file (default: config.json)', default='config.json')
     main_args.add_argument('--output_dir', help='output directory')
 
-    main_args.add_argument('--mode', help="action to take (default: launch)", default="launch", choices=["launch", "collect"])
+    main_args.add_argument('--mode', help="action to take (default: launch)", default="launch", choices=["launch", "collect", "test"])
     main_args.add_argument('--forecast_group', help='name of forecast group')
     main_args.add_argument('--num_sundays', help="forecast for last n sundays", type=int)
     main_args.add_argument('--forecast_dates', nargs="+", help='forecast for specific dates')    
@@ -106,7 +106,12 @@ if __name__ == "__main__":
         for forecast_date in forecast_dates:
             prefix = f'{output_dir}/{forecast_group}/{model_config_name}/{forecast_date}'
 
-            if args.mode == "launch":
+            if args.mode == "test":
+                for place in places:
+                    name = f'{place}-{forecast_date}-{model_config_name}'
+                    print(name)
+
+            elif args.mode == "launch":
                 for place in places:
 
                     name = f'{place}-{forecast_date}-{model_config_name}'
