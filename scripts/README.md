@@ -1,5 +1,6 @@
 # Folder structure
 
+TODO
 
 # Running weekly forecasts
 
@@ -7,43 +8,38 @@
 
 2. Launch forecasts
 
-~~~ bash
-python launch.py \
- --output_dir /mnt/nfs/work1/sheldon/sheldon/mechbayes-test \
- --forecast_group US \
- --num_sundays 1
-~~~
+    ~~~ bash
+    python launch.py \
+     --output_dir /mnt/nfs/work1/sheldon/sheldon/mechbayes-test \
+     --forecast_group US \
+     --num_sundays 1
+    ~~~
 
 3. Collect forecasts (creates web page and submission files)
 
-~~~ bash
-python launch.py \
- --output_dir /mnt/nfs/work1/sheldon/sheldon/mechbayes-test \
- --forecast_group US \
- --num_sundays 1 \
- --collect
-~~~
+    ~~~ bash
+    python launch.py \
+     --output_dir /mnt/nfs/work1/sheldon/sheldon/mechbayes-test \
+     --forecast_group US \
+     --num_sundays 1 \
+     --collect
+    ~~~
 
 4. Publish web page, summaries, and submission files to web server.
 
-~~~bash
-./publish.sh /mnt/nfs/work1/sheldon/sheldon/mechbayes-test US
-~~~~
+    ~~~bash
+    ./publish.sh /mnt/nfs/work1/sheldon/sheldon/mechbayes-test US
+    ~~~~
 
-This uses rsync so only pushes files that change, but you can
-also specify individual directories, which is faster because 
-it doesn't need to scan all the files:
+    This uses rsync so only pushes files that change, but you can
+    also specify individual directories, which is faster because 
+    it doesn't need to scan all the files:
 
-~~~ bash
-export ROOT=
-./publish.sh /mnt/nfs/work1/sheldon/sheldon/mechbayes-test US/renewal
-./publish.sh /mnt/nfs/work1/sheldon/sheldon/mechbayes-test US/renewal/2021-07-25
-~~~
+    ~~~ bash
+    ./publish.sh /mnt/nfs/work1/sheldon/sheldon/mechbayes-test US/renewal
+    ./publish.sh /mnt/nfs/work1/sheldon/sheldon/mechbayes-test US/renewal/2021-07-25
+    ~~~
 
-
-# config.json
-
-~~~
 
 # config.json
 

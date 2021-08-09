@@ -7,7 +7,7 @@ import numpyro.distributions as dist
 
 from ..compartment import SEIRDModel
 from .util import observe, observe_nb2, LogisticRandomWalk, frozen_random_walk, clean_daily_obs
-from .base import SEIRDBase, getter
+from .base import SEIRDBase
 
 import numpy as onp
 
@@ -30,35 +30,8 @@ def Geometric1(mu):
         return np.where(k > 0, (k-1) * log_1_minus_p + log_p, -np.inf)
     return log_prob
 
-def simulate_SEIRD_renewal(x0, N, T, theta, CONV_WIDTH=80):
+def simulate_incidence(incidence_history, N, T, A, beta):
 
-    beta, sigma, gamma, death_prob, death_rate = theta
-
-    # U = latent period
-    # V = infectious period
-    #
-    # For some reason this gives closest match to the diff eq. model
-    # with U drawn from the geometric distribution supported on non-
-    # negative integers and V drawn from the geometric supported on
-    # positive integers.
-    U_logp = Geometric0(1/sigma)
-    V_logp = Geometric1(1/gamma)
-    D_logp = Geometric0(1/death_rate)
-
-    t = np.arange(CONV_WIDTH)
-
-    U_pmf = np.exp(U_logp(t))
-    U_ccdf = 1 - np.cumsum(U_pmf)
-
-    V_pmf = np.exp(V_logp(t))
-    V_ccdf = 1- np.cumsum(V_pmf)
-
-    D_pmf = np.exp(D_logp(t))
-    # A(t) = Pr(infectious t time units after being infected) 
-    #      = sum_u Pr(U=u) * Pr(V >= t-u)
-    #      = convolution of U pmf and V ccdf
-
-    A = np.convolve(U_pmf, V_ccdf, mode='full')[:CONV_WIDTH]
     A_rev = A[::-1] # to facilitate convolution inside the dynamics loop
 
     # Let dE(t) be newly exposed cases at time t. Then
@@ -70,35 +43,89 @@ def simulate_SEIRD_renewal(x0, N, T, theta, CONV_WIDTH=80):
     def scan_body(state, beta):
         # The state of the scan body is a pair:
         #
-        #    incidence_history   (vector) incident exposures (dE) over 
-        #                         over the last CONV_WINDOW time steps
+        #    dE_history   (vector) incident exposures (dE) over 
+        #                 over the last CONV_WIDTH time steps
         #
-        #                    S   (scalar) current number of susceptibles
+        #                 S   (scalar) current number of susceptibles
         #
-        incidence_history, S = state
-        dE = beta * S/N * np.sum(incidence_history * A_rev)
-        new_state = (np.append(incidence_history[1:], dE), S-dE)
+        dE_history, S = state
+        dE = beta * S/N * np.sum(dE_history * A_rev)
+        new_state = (np.append(dE_history[1:], dE), S-dE)
         return new_state, dE
+    
+    S_init = N - incidence_history.sum()
 
-    '''First compute time series dE of new exposures'''
-    dE0 = x0
-    incidence_history_init = np.append(np.zeros(CONV_WIDTH-1), dE0)        
-    S = N - dE0
+    T_history = len(incidence_history)
+    CONV_WIDTH = len(A)
+    if T_history < CONV_WIDTH:
+        dE_init = np.pad(incidence_history, (CONV_WIDTH - T_history, 0))
+    else:
+        dE_init = incidence_history[-CONV_WIDTH:]
+
     _, dE = jax.lax.scan(scan_body,                    # function to be scanned
-                         (incidence_history_init, S),  # initial state
+                         (dE_init, S_init),  # initial state
                          beta*np.ones(T-1))            # vector of inputs, one per time step
-    dE = np.append(dE0, dE)
 
-    '''Calculate other variables from incident exposures via convolutions'''
+    incidence_history = np.append(incidence_history, dE)
+
+    return incidence_history
+
+def get_infection_kernel(sigma, gamma, CONV_WIDTH=80):
+    '''Returns a convolution kernel for SEIR model
+    
+    A(t) = Pr(infectious t time units after being infected) 
+    
+    This is proportional to the generation interval and 
+    integrates to R0. 
+    
+    It is obtained by convolving the pmf of the time from 
+    exposure to infection and the complementary cdf of the 
+    time from infection to recovery:
+    
+    A(t) = Pr(infectious t time units after being infected)                
+         = sum_u Pr(U=u) * Pr(V >= t-u)
+         
+    where U is the latent period
+      and V is the infectious period
+    '''
+    # (There's no good reason to use two different geometric distributions 
+    # here except that it matched the differential equation model better)
+    U_logp = Geometric0(1/sigma)
+    V_logp = Geometric1(1/gamma)
+
+    t = np.arange(CONV_WIDTH)
+
+    U_pmf = np.exp(U_logp(t))
+    V_pmf = np.exp(V_logp(t))
+    V_ccdf = 1 - np.cumsum(V_pmf)
+
+    A = np.convolve(U_pmf, V_ccdf, mode='full')[:CONV_WIDTH]
+
+    return A
+
+def incidence_to_infections_and_deaths(dE, sigma, gamma, death_prob, death_rate, CONV_WIDTH=80):
+    '''Calculate infections and deaths from incident exposures via convolutions'''
+        
+    T = len(dE)
+
+    # U = latent period
+    # V = infectious period
+    # W = time from leaving infectious compartment to death
+    U_logp = Geometric0(1/sigma)
+    V_logp = Geometric1(1/gamma)
+    W_logp = Geometric0(1/death_rate)
+
+    t = np.arange(CONV_WIDTH)
+
+    U_pmf = np.exp(U_logp(t))
+    V_pmf = np.exp(V_logp(t))
+    W_pmf = np.exp(W_logp(t))
+       
     dI = np.convolve(dE, U_pmf, mode='full')[:T]             # incident infections
     dH = np.convolve(death_prob*dI, V_pmf, mode='full')[:T]  # entries into first compartment of death pathway
-    dD = np.convolve(dH, D_pmf, mode='full')[:T]             # incident deaths
+    dD = np.convolve(dH, W_pmf, mode='full')[:T]             # incident deaths
 
-    # NOTE: could eliminate dH by modifying D_pmf by convolving with V_pmf
-
-    # print(f"T={T}, len(dI)={len(dI)}, len(dE)={len(dE)}")
-    
-    return (dI, dD) 
+    return dI, dD
 
 
 """
@@ -138,13 +165,13 @@ class SEIRD(SEIRDBase):
         Stochastic SEIR model. Draws random parameters and runs dynamics.
         '''        
                 
-        # Sample initial number of infected individuals
-        I0 = numpyro.sample("I0", dist.Uniform(0, 1e-4*N))  # change to 1e-3 if starting on 2020-03-16
-        E0 = numpyro.sample("E0", dist.Uniform(0, 1e-4*N))  # change to 1e-3 if starting on 2020-03-16
-        H0 = numpyro.sample("H0", dist.Uniform(0, 1e-4*N))
+        # Sample initial time series of exposed individuals and 
+        # initial (cumulative) number of cases and deaths        
+        seed_length = 10;
+        dE_init = numpyro.sample("dE_init", dist.Uniform(0, 1e-4*N*np.ones(seed_length)))
+        I0 = numpyro.sample("I0", dist.Uniform(0, 1e-4*N))
         D0 = numpyro.sample("D0", dist.Uniform(0, 1e-4*N))
-
-
+        
         # Sample dispersion parameters around specified values
 
         death_dispersion = numpyro.sample("death_dispersion", 
@@ -157,9 +184,7 @@ class SEIRD(SEIRDBase):
                                               dist.TruncatedNormal(low=0.1,
                                                                    loc=confirmed_dispersion, 
                                                                    scale=0.15))
-
-
-
+        
         
         # Sample parameters
         sigma = numpyro.sample("sigma", 
@@ -187,14 +212,11 @@ class SEIRD(SEIRDBase):
                                     dist.Gamma(death_rate_shape, death_rate_shape * H_duration_est))
 
 
-        x0 = SEIRDModel.seed(N=N, I=I0, E=E0, H=H0, D=D0)
-        numpyro.deterministic("x0", x0)
-
         # Split observations into first and rest
         if confirmed is None:
             confirmed0, confirmed = (None, None)
         else:
-            confirmed0 = confirmed[0]
+            confirmed0 = confirmed[0]  # this is cumulative number of cases by start date
             confirmed = clean_daily_obs(onp.diff(confirmed))
             
         if death is None:
@@ -203,13 +225,6 @@ class SEIRD(SEIRDBase):
             death0 = death[0]
             death = clean_daily_obs(onp.diff(death))
         
-        # First observation
-        with numpyro.handlers.scale(scale=0.5):
-            y0 = observe_nb2("dy0", x0[6], det_prob0, confirmed_dispersion, obs=confirmed0)
-            
-        with numpyro.handlers.scale(scale=2.0):
-            z0 = observe_nb2("dz0", x0[5], det_prob_d, death_dispersion, obs=death0)
-
         params = (beta0, 
                   sigma, 
                   gamma, 
@@ -220,26 +235,27 @@ class SEIRD(SEIRDBase):
                   death_prob, 
                   death_rate, 
                   det_prob_d)
+                
+        infections_init, deaths_init = incidence_to_infections_and_deaths(dE_init, sigma, gamma, death_prob, death_rate)
         
-        
-        #print(f"T-1={T-1}, len(confirmed)={len(confirmed)}")
+        # First observation
+        dy0 = observe_nb2("dy0", I0, det_prob0, confirmed_dispersion, obs=confirmed0)
+        dz0 = observe_nb2("dz0", D0, det_prob_d, death_dispersion, obs=death0)
+               
+        beta, det_prob, dE, dI, dD, dy, dz = self.dynamics(T-1, 
+                                                           params, 
+                                                           dE_init,
+                                                           N,
+                                                           num_frozen = num_frozen,
+                                                           confirmed = confirmed,
+                                                           death = death)
 
-
-        beta, det_prob, y, z = self.dynamics(T-1, 
-                                             params, 
-                                             x0,
-                                             N,
-                                             num_frozen = num_frozen,
-                                             confirmed = confirmed,
-                                             death = death,
-                                             num_obs = None)
-
-        y = np.append(y0, y)
-        z = np.append(z0, z)
+        dy = np.append(dy0, dy)
+        dz = np.append(dz0, dz)
 
         if T_future > 0:
 
-            params = (np.append(beta,np.repeat(beta[-rw_use_last:].mean(), T_future)), 
+            params = (beta[-rw_use_last:].mean(), 
                       sigma, 
                       gamma, 
                       forecast_rw_scale, 
@@ -250,20 +266,21 @@ class SEIRD(SEIRDBase):
                       death_rate, 
                       det_prob_d)
 
-            beta_f, det_rate_rw_f, y_f, z_f = self.dynamics(T + T_future - 1,
-                                                            params,
-                                                            x0,
-                                                            N,
-                                                            suffix = "_future",
-                                                            num_obs = T_future)
+            beta_f, det_prob_f, dE, dI, dD, dy_f, dz_f = self.dynamics(T_future,
+                                                                       params,
+                                                                       dE,
+                                                                       N,
+                                                                       suffix = "_future")
 
-            y = np.append(y, y_f)
-            z = np.append(z, z_f)
+            beta = np.append(beta, beta_f)
+            det_prob = np.append(det_prob, det_prob_f)
+            dy = np.append(dy, dy_f)
+            dz = np.append(dz, dz_f)
 
-        return beta, y, z
+        return beta, det_prob, dE, dI, dD, dy, dz
             
 
-    def dynamics(self, T, params, x0, N, num_frozen=0, confirmed=None, death=None, suffix="", num_obs=None):
+    def dynamics(self, T, params, dE_history, N, num_frozen=0, confirmed=None, death=None, suffix=""):
         '''Run SEIRD dynamics for T time steps'''
 
         beta0, \
@@ -276,11 +293,7 @@ class SEIRD(SEIRDBase):
         death_prob, \
         death_rate, \
         det_prob_d = params
-
-        
-        if num_obs is None:
-            num_obs = T
-        
+                
         rw = frozen_random_walk("rw" + suffix,
                                 num_steps=T-1,
                                 num_frozen=num_frozen)
@@ -292,22 +305,19 @@ class SEIRD(SEIRDBase):
                                                      scale=rw_scale, 
                                                      num_steps=T))
 
-        # Run ODE
-        theta = (beta, sigma, gamma, death_prob, death_rate) 
-        new_cases, new_deaths = simulate_SEIRD_renewal(x0[1], N, T, theta, CONV_WIDTH=80)
-
-        # Don't let incident cases/deaths be exactly zero (or worse, negative!)
-        new_cases = np.maximum(new_cases, 0.1)
-        new_deaths = np.maximum(new_deaths, 0.1)
- 
-        #print(f"len(new_cases)={len(new_cases)}, len(det_prob)={len(det_prob)}, len(confirmed)={len(confirmed)}")
+        A = get_infection_kernel(sigma, gamma, CONV_WIDTH=40)
+        dE = simulate_incidence(dE_history, N, T, A, beta)
+        dI, dD = incidence_to_infections_and_deaths(dE, sigma, gamma, death_prob, death_rate, CONV_WIDTH=80)
+        
+        #dI = np.maximum(dI, 0.01)
+        #dD = np.maximum(dD, 0.01)
 
         # Noisy observations
         with numpyro.handlers.scale(scale=0.5):
-            y = observe_nb2("dy" + suffix, new_cases[-num_obs:], det_prob[-num_obs:], confirmed_dispersion, obs = confirmed)
+            dy = observe_nb2("dy" + suffix, dI[-T:], det_prob[-T:], confirmed_dispersion, obs = confirmed)
 
         with numpyro.handlers.scale(scale=2.0):
-            z = observe_nb2("dz" + suffix, new_deaths[-num_obs:], det_prob_d, death_dispersion, obs = death)
+            dz = observe_nb2("dz" + suffix, dD[-T:], det_prob_d, death_dispersion, obs = death)
 
-        return beta, det_prob, y, z
+        return beta, det_prob, dE, dI, dD, dy, dz
     
