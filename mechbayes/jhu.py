@@ -59,7 +59,8 @@ def get_country_info():
     df['name'] = df['Country_Region']
     df['key'] = df['Country_Region']
     df = df.set_index('key')
-    
+    df.loc['US', 'name'] = 'United States' # set name to United States instead of US
+
     return df
 
 @cachetools.func.ttl_cache(ttl=600)

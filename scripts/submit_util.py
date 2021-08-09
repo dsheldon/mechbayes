@@ -127,11 +127,12 @@ def generate_forecast_df(forecast_date,
     
     # empty forecast data structure
     forecast = {'quantile': [],
-                'target_end_date': [],
                 'value': [],
                 'type': [],
                 'location': [],
-                'target': []}
+                'target': [],
+                'forecast_date': [],
+                'target_end_date': []}
 
     forecast["forecast_date"] = forecast_date
     next_saturday = pd.Timedelta('6 days')
@@ -178,6 +179,8 @@ def generate_forecast_df(forecast_date,
                     forecast["target_end_date"].append(target_end_date)
 
     forecast_df = pd.DataFrame(forecast)
+
+    
 
     location_codes = get_location_codes()
     forecast_df['location'] = forecast_df['location'].replace(location_codes)

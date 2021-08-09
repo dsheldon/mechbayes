@@ -56,7 +56,7 @@
 
     "regions" : {
 
-        "test_region": ["US", "AS"],
+        "US_and_states_sorted": ["US", "AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MP", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"],
         
         "US_and_states": ["US",
                           "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -78,8 +78,29 @@
 
     "forecast_groups": {       
 
+        "test": {
+            "region": "US_and_states_sorted",
+            "start" : "2020-03-04",
+            "model_configs" : ["frozen_21"],
+            "submit" : true,
+            "submit_args": {
+                "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
+                              0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
+                "num_weeks" : 4,
+                "targets" : ["inc death", "cum death"],
+                "location_codes" : "US Forecast Hub",
+                "team_name" : "UMass",
+                "model_name" : "MechBayes"
+            },
+	    "publish": false,
+	    "publish_args": {
+		"host" : "doppler",
+		"dest":  "/var/www/html/covid"
+	    }
+        },
+
         "US": {
-            "region": "US_and_states",
+            "region": "US_and_states_sorted",
             "start" : "2020-03-04",
             "model_configs" : ["renewal", "llonger_H_fix", "frozen_21", "frozen_28"],
             "submit" : true,

@@ -1,6 +1,7 @@
 import mechbayes.jhu as jhu
 import os
 from pathlib import Path
+import json
 
 '''Utilities for web visualization'''
 def install_vis(prefix, places):
@@ -16,6 +17,7 @@ def install_vis(prefix, places):
 
     # Write places.js file
     info = jhu.get_place_info();
-    json = info[info.index.isin(places)]['name'].to_json(orient='index')
+    place2name = {place: info.loc[place, 'name'] for place in places}
+    places_json = json.dumps(place2name);
     with open(f"{prefix}/vis/places.js", "w") as f:
-        f.write(f'var places={json};')
+        f.write(f'var places={places_json};')
