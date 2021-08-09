@@ -1,4 +1,6 @@
 {
+    "output_dir" : "/mnt/nfs/work1/sheldon/sheldon/mechbayes",
+
     "model_configs" : {
         
         "renewal": {

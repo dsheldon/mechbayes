@@ -16,14 +16,13 @@ if __name__ == "__main__":
     
     main_args = parser.add_argument_group("main arguments")
     main_args.add_argument('--config_file', help='configuration file (default: config.json)', default='config.json')
-    main_args.add_argument('--output_dir', help='output directory')
-
     main_args.add_argument('--mode', help="action to take (default: launch)", default="launch", choices=["launch", "collect", "test"])
     main_args.add_argument('--forecast_group', help='name of forecast group')
     main_args.add_argument('--num_sundays', help="forecast for last n sundays", type=int)
     main_args.add_argument('--forecast_dates', nargs="+", help='forecast for specific dates')    
 
-    override_args = parser.add_argument_group("to manually set forecast group configuration options")
+    override_args = parser.add_argument_group("to manually set or override config file options")
+    override_args.add_argument('--output_dir', help='output directory')
     override_args.add_argument('--region', help='region name')    
     override_args.add_argument('--places',  nargs="+", help='places to run (overrides region)')
     override_args.add_argument('--model_configs', nargs="+", help='model configuration names')
@@ -53,10 +52,10 @@ if __name__ == "__main__":
     start = None
     config = load_config(args.config_file)
     
-    output_dir = args.output_dir
+    output_dir = args.output_dir if args.output_dir else config['output_dir']
     if not output_dir:
-        raise ValueError("--output_dir is required")
-    
+        raise ValueError("output_dir is required")
+
     # Get forecast group configuration arguments
     if args.forecast_group:
         forecast_group = args.forecast_group
