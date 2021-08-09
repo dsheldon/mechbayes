@@ -165,9 +165,12 @@ class SEIRD(SEIRDBase):
         Stochastic SEIR model. Draws random parameters and runs dynamics.
         '''        
                 
-        # Sample initial number of infected individuals
-        seed_length = 30;
+        # Sample initial time series of exposed individuals and 
+        # initial (cumulative) number of cases and deaths        
+        seed_length = 10;
         dE_init = numpyro.sample("dE_init", dist.Uniform(0, 1e-4*N*np.ones(seed_length)))
+        I0 = numpyro.sample("I0", dist.Uniform(0, 1e-4*N))
+        D0 = numpyro.sample("D0", dist.Uniform(0, 1e-4*N))
         
         # Sample dispersion parameters around specified values
 
@@ -181,9 +184,7 @@ class SEIRD(SEIRDBase):
                                               dist.TruncatedNormal(low=0.1,
                                                                    loc=confirmed_dispersion, 
                                                                    scale=0.15))
-
-
-
+        
         
         # Sample parameters
         sigma = numpyro.sample("sigma", 
@@ -238,20 +239,16 @@ class SEIRD(SEIRDBase):
         infections_init, deaths_init = incidence_to_infections_and_deaths(dE_init, sigma, gamma, death_prob, death_rate)
         
         # First observation
-        with numpyro.handlers.scale(scale=0.5):
-            dy0 = observe_nb2("dy0", infections_init.sum(), det_prob0, confirmed_dispersion, obs=confirmed0)
-            
-        with numpyro.handlers.scale(scale=2.0):
-            dz0 = observe_nb2("dz0", deaths_init.sum(), det_prob_d, death_dispersion, obs=death0)
-       
-        
+        dy0 = observe_nb2("dy0", I0, det_prob0, confirmed_dispersion, obs=confirmed0)
+        dz0 = observe_nb2("dz0", D0, det_prob_d, death_dispersion, obs=death0)
+               
         beta, det_prob, dE, dI, dD, dy, dz = self.dynamics(T-1, 
-                                                         params, 
-                                                         dE_init,
-                                                         N,
-                                                         num_frozen = num_frozen,
-                                                         confirmed = confirmed,
-                                                         death = death)
+                                                           params, 
+                                                           dE_init,
+                                                           N,
+                                                           num_frozen = num_frozen,
+                                                           confirmed = confirmed,
+                                                           death = death)
 
         dy = np.append(dy0, dy)
         dz = np.append(dz0, dz)
