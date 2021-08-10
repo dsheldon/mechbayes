@@ -11,22 +11,7 @@ import mechbayes.util as util
 
 from vis_util import install_vis
 from submit_util import create_submission_file
-from run_util import load_config, get_method
-
-
-def do_publish(forecast_config):
-    print(f"Publishing to web server")
-    try:
-        publish_args = forecast_config['publish_args']
-        host = publish_args['host']
-        dest = publish_args['dest']
-        cmd = f"./publish.sh {output_dir} {forecast_group}/{model_config_name} {host} {dest}"
-        os.system(cmd)
-
-    except Exception:
-        warnings.warn("Failed to publish to web server. Exception info:")
-        traceback.print_exc()
-
+from run_util import load_config, get_method, do_publish
 
 if __name__ == "__main__":
 
@@ -36,7 +21,7 @@ if __name__ == "__main__":
     
     main_args = parser.add_argument_group("main arguments")
     main_args.add_argument('--config_file', help='configuration file (default: config.json)', default='config.json')
-    main_args.add_argument('--mode', help="action to take (default: launch)", default="launch", choices=["launch", "collect", "test", "score"])
+    main_args.add_argument('--mode', help="action to take (default: launch)", default="launch", choices=["launch", "collect", "test"])
     main_args.add_argument('--forecast_group', help='name of forecast group')
     main_args.add_argument('--num_sundays', help="forecast for last n sundays", type=int)
     main_args.add_argument('--forecast_dates', nargs="+", help='forecast for specific dates')    
@@ -193,50 +178,6 @@ if __name__ == "__main__":
                         print(f"failed to create submission file. Exception info:")
                         traceback.print_exc()
                 
-
-                # Publish to web server 
-                if forecast_config['publish']:
-                    do_publish(forecast_config)
-
-            elif args.mode == "score":
-                
-                if pd.to_datetime("today") < pd.to_datetime(forecast_date) + pd.Timedelta("6d"):
-                    continue    # no truth data availble yet
-
-                data = util.load_data()
-                
-                # Get model instance: used to extract forecast from samples
-                model_config = config['model_configs'][model_config_name]
-                model_type = get_method(model_config['model'])
-                score_args = forecast_config['score_args']
-                
-                pad_strategy = score_args.get('pad_strategy') or 'shift'
-                num_weeks = score_args.get('num_weeks') or 4
-
-                summary = pd.DataFrame()
-                details = pd.DataFrame()
-
-                for target in score_args['targets']:
-
-                    # score all available weeks
-                    target_summary, target_details = util.score_forecast(forecast_date,
-                                                                         data,
-                                                                         places=places,
-                                                                         model_type=model_type,
-                                                                         prefix=prefix,
-                                                                         target=target,
-                                                                         freq="week",
-                                                                         periods=num_weeks,
-                                                                         pad_strategy=pad_strategy)
-
-                    summary = pd.concat([summary, target_summary])
-                    details = pd.concat([details, target_details])
-
-
-                path = Path(prefix) / 'eval'
-                path.mkdir(parents=True, exist_ok=True)
-                summary.to_csv(path / f'summary.csv', float_format="%.4f")
-                details.to_csv(path / f'details.csv', float_format="%.4f")
 
                 # Publish to web server 
                 if forecast_config['publish']:
