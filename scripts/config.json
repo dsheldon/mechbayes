@@ -92,10 +92,14 @@
                 "team_name" : "UMass",
                 "model_name" : "MechBayes"
             },
-	    "publish": false,
+	    "publish": true,
 	    "publish_args": {
 		"host" : "doppler",
 		"dest":  "/var/www/html/covid"
+	    },
+	    "score_args": {
+                "num_weeks" : 4,
+                "targets" : ["inc death", "cum death"]
 	    }
         },
 

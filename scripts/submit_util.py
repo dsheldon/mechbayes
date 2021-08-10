@@ -17,6 +17,7 @@ def create_submission_file(prefix, forecast_date, model, data, places, submit_ar
     num_weeks = submit_args["num_weeks"]
     quantiles = submit_args["quantiles"]
     targets_to_run = submit_args["targets"]
+    pad_strategy = submit_args.get("pad_strategy") or "shift"
 
     forecast_df = pd.DataFrame()
 
@@ -34,7 +35,8 @@ def create_submission_file(prefix, forecast_date, model, data, places, submit_ar
                                                             places,
                                                             quantiles,
                                                             num_weeks,
-                                                            samples_directory)
+                                                            samples_directory,
+                                                            pad_strategy)
 
         has_any_missing = has_any_missing or has_missing_place
 
@@ -98,7 +100,8 @@ def generate_forecast_df(forecast_date,
                          places,
                          quantiles,
                          num_weeks,
-                         samples_directory):
+                         samples_directory,
+                         pad_strategy="shift"):
 
     forecast_start = forecast_date #+ pd.Timedelta("1d")
 
@@ -130,8 +133,8 @@ def generate_forecast_df(forecast_date,
         jhu_variable = target2jhu[target]
         truth_data = data[place]['data'][jhu_variable]        
 
-        forecast_samples = model.get(forecast_samples, variable_name, forecast=True)        
-        daily_df = util.construct_daily_df(forecast_start, forecast_samples, target, truth_data=truth_data, pad_strategy="shift")
+        forecast_samples = model.get(forecast_samples, variable_name, forecast=True)
+        daily_df = util.construct_daily_df(forecast_start, forecast_samples, target, truth_data=truth_data, pad_strategy=pad_strategy)
         weekly_df = util.resample_to_weekly(daily_df, target)
 
         for week_ahead in range(1, num_weeks+1):

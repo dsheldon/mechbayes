@@ -1,5 +1,6 @@
 import importlib
 import json
+import traceback
 
 '''Utilities for running the model'''
 def load_config(filename):
@@ -7,7 +8,9 @@ def load_config(filename):
         with open(filename) as json_file:
             config = json.load(json_file)
     except Exception as e:
-        raise Exception("Could not parse config file. Please check syntax.") from e
+        print("Could not parse config file. Please check syntax. Exception information with deatils follows\n")
+        raise(e)
+
     return config
 
 def get_method(method_name):
