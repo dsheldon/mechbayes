@@ -380,22 +380,71 @@ Performance metrics
 ************************************************************
 """
 
+def construct_daily_df(forecast_date, forecast_samples, target, truth_data=None, pad_strategy="shift"):
+
+    # Construct df indexed by time with samples in columns
+    #    - starts one day after forecast date (usually Monday)
+    t = pd.date_range(start=forecast_date + pd.Timedelta("1d"),
+                      periods=forecast_samples.shape[1],
+                      freq='D')
+    daily_df = pd.DataFrame(index=t, data=np.transpose(forecast_samples))
+    
+    # For incident forecasts made on Sunday, pad to include a value for Sunday
+    # so the first week is complete. This does not apply to forecasts made on 
+    # other days because:
+    #
+    #  -- we will never submit a forecast on Monday for the current week, 
+    #     because the data is not available until ~midnight on Monday
+    # 
+    #  -- forecasts submitted on Tuesday--Thursday are for the following week
+    #
+    if target.startswith("inc") and forecast_date.dayofweek == 6:
+        if pad_strategy == "shift":
+            daily_df.index -= pd.Timedelta("1d")
+        elif pad_strategy == "truth":
+            if truth_data is None:
+                raise ValueError("Must supply truth_data with pad_strategy='truth'")
+            sunday = forecast_date
+            saturday = sunday - pd.Timedelta("1d")
+            truth_val = truth_data.loc[sunday] - truth_data.loc[saturday]
+            if truth_val < 0:
+                truth_val = 0.
+            daily_df.loc[sunday, :] = truth_val
+        else:
+            raise ValueError(f"Unsuported pad_strategy {pad_strategy}")
+
+    # Always starts on forecast date
+    return daily_df
+ 
+def resample_to_weekly(daily_df, target):
+    if target.startswith("inc"):
+        weekly_df = daily_df.resample("1w", closed='left', label='left').sum()
+    elif target.startswith("cum"):
+        weekly_df = daily_df.resample("1w", label='left', closed='left').last()
+    else:
+        raise ValueError(f"uncrecognized target {target}")          
+    
+    weekly_df[weekly_df < 0.] = 0.
+    # First date is the forecast date (Sunday); row has value for upcoming week
+    return weekly_df 
+
 def score_place(forecast_date,
                 data,
                 place,
                 model_type=mechbayes.models.SEIRD.SEIRD,
                 prefix="results",
-                target='deaths'):
+                target="cum death",
+                step="weekly"):
     '''Gives performance metrics for each time horizon for one place'''
     
-    if target == 'deaths':
+    if target == 'cum death':
         forecast_field = 'z'
         obs_field = 'death'
-    elif target == 'cases':
+    elif target == 'cum case':
         forecast_field = 'y'
         obs_field = 'confirmed'
     else:
-        raise ValueError('Invalid target')
+        raise ValueError(f"Invalid or unsupported target {target}")
 
 
     filename = Path(prefix) / 'samples' / f'{place}.npz'
@@ -408,7 +457,6 @@ def score_place(forecast_date,
 
     # cumulative deaths/cases 
     obs = data[place]['data'][start:][obs_field]
-    end = obs.index.max()
 
     # predicted deaths/cases
     z = model.get(forecast_samples, forecast_field, forecast=True)
@@ -420,6 +468,9 @@ def score_place(forecast_date,
     
     # create data frame for analysis
     samples = pd.DataFrame(index=obs.index, data=z.T)
+
+    # if weekly, aggregate data frames
+    
 
     n_samples = samples.shape[1]
 

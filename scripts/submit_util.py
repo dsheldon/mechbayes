@@ -5,8 +5,9 @@ import mechbayes.jhu as jhu
 from pathlib import Path
 import warnings
 
+
 '''Submission'''
-def create_submission_file(prefix, forecast_date, model, places, submit_args):
+def create_submission_file(prefix, forecast_date, model, data, places, submit_args):
     
     print(f"Creating submission file in {prefix}")
     samples_directory = f"{prefix}/samples"
@@ -20,12 +21,15 @@ def create_submission_file(prefix, forecast_date, model, places, submit_args):
     forecast_df = pd.DataFrame()
 
     forecast_date = pd.to_datetime(forecast_date)
+    if (forecast_date.dayofweek != 6):
+        raise ValueError(f"Submission files only supported for forecasts made on Sunday")
 
     has_any_missing = False
 
     for target in targets_to_run:
         target_df, has_missing_place = generate_forecast_df(forecast_date,
                                                             model,
+                                                            data,
                                                             target,
                                                             places,
                                                             quantiles,
@@ -45,39 +49,6 @@ def create_submission_file(prefix, forecast_date, model, places, submit_args):
         fname = f"{prefix}/{forecast_date_str}-{team_name}-{model_name}.csv"
 
     forecast_df.to_csv(fname, float_format="%.0f", index=False)
-
-
-def construct_daily_df(forecast_start, forecast_samples, target):
-    if target.startswith("inc"):
-        t = pd.date_range(start=forecast_start,
-                          periods=forecast_samples.shape[1],
-                          freq='D')
-        
-        daily_df = pd.DataFrame(index=t, data=np.transpose(forecast_samples))
-        
-    elif target.startswith("cum"):
-        t = pd.date_range(start=forecast_start + pd.Timedelta("1d"),
-                          periods=forecast_samples.shape[1]-1,
-                          freq='D')
-        
-        daily_df = pd.DataFrame(index=t, data=np.transpose(forecast_samples[:,:-1]))
-        
-    else:
-        raise ValueError(f"uncrecognized target {target}")
-
-    return daily_df
- 
-def resample_to_weekly(daily_df, target):
-    if target.startswith("inc"):
-        weekly_df = daily_df.resample("1w", closed='left', label='left').sum()
-    elif target.startswith("cum"):
-        weekly_df = daily_df.resample("1w", label='left', closed='left').last()#
-    else:
-        raise ValueError(f"uncrecognized target {target}")          
-    
-    weekly_df[weekly_df < 0.] = 0.
-    return weekly_df 
-
 
 def get_location_codes():
 
@@ -113,8 +84,16 @@ target2var = {'inc case' : 'dy',
               'inc death' : 'dz',
               'cum death' : 'z'};
 
+
+# JHU truth variable corresponding to target
+target2jhu = {'inc case' : 'confirmed',
+              'cum case' : 'confirmed',
+              'inc death' : 'death',
+              'cum death' : 'death'};
+
 def generate_forecast_df(forecast_date,
                          model,
+                         data,
                          target,
                          places,
                          quantiles,
@@ -147,17 +126,18 @@ def generate_forecast_df(forecast_date,
             warnings.warn(f"Failed to load data: {samples_directory}/{place}.npz")
             has_missing_place = True
             continue
-        
-        forecast_samples = model.get(forecast_samples, variable_name, forecast=True)
-        
-        daily_df = construct_daily_df(forecast_start, forecast_samples, target)
-        
-        weekly_df = resample_to_weekly(daily_df, target)
-        
-        for time, samples in weekly_df.iterrows():
-            
-            week_ahead = time.week - forecast_date.week + 1
-            target_end_date_datetime = pd.to_datetime(time) + next_saturday
+
+        jhu_variable = target2jhu[target]
+        truth_data = data[place]['data'][jhu_variable]        
+
+        forecast_samples = model.get(forecast_samples, variable_name, forecast=True)        
+        daily_df = util.construct_daily_df(forecast_start, forecast_samples, target, truth_data=truth_data, pad_strategy="shift")
+        weekly_df = util.resample_to_weekly(daily_df, target)
+
+        for week_ahead in range(1, num_weeks+1):
+            target_week_start = forecast_date + pd.Timedelta(weeks=week_ahead-1)
+            samples = weekly_df.loc[target_week_start]
+            target_end_date_datetime = pd.to_datetime(target_week_start) + next_saturday
             target_end_date = target_end_date_datetime.strftime("%Y-%m-%d")
             week_ahead_target = f"{week_ahead:d} wk ahead {target}"
             

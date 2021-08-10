@@ -4,6 +4,10 @@ import pandas as pd
 from pathlib import Path
 import time
 import warnings
+import traceback
+
+
+import mechbayes.util as util
 
 from vis_util import install_vis
 from submit_util import create_submission_file
@@ -17,7 +21,7 @@ if __name__ == "__main__":
     
     main_args = parser.add_argument_group("main arguments")
     main_args.add_argument('--config_file', help='configuration file (default: config.json)', default='config.json')
-    main_args.add_argument('--mode', help="action to take (default: launch)", default="launch", choices=["launch", "collect", "test"])
+    main_args.add_argument('--mode', help="action to take (default: launch)", default="launch", choices=["launch", "collect", "test", "score"])
     main_args.add_argument('--forecast_group', help='name of forecast group')
     main_args.add_argument('--num_sundays', help="forecast for last n sundays", type=int)
     main_args.add_argument('--forecast_dates', nargs="+", help='forecast for specific dates')    
@@ -145,26 +149,34 @@ if __name__ == "__main__":
                 # Install visualization
                 try:
                     install_vis(prefix, places)
-                except Exception as e:
-                    print(f"failed to install vis. Exception is\n{str(e)}")
+                except Exception:
+                    print(f"failed to install vis. Exception info:")
+                    traceback.print_exc()
+
 
 
                 # Create submission file
                 if forecast_config['submit']:
 
-                    try:
-                        # Get dummy model instance to extract variables from samples files
-                        model_config = config['model_configs'][model_config_name]
-                        model_type = get_method(model_config['model'])
-                        model = model_type()
+                    # JHU data is used to pad incident forecasts with a value for Sunday
+                    # of the forecast week
+                    data = util.load_data()
 
+                    # Get dummy model instance: used to extract forecast from samples
+                    model_config = config['model_configs'][model_config_name]
+                    model_type = get_method(model_config['model'])
+                    model = model_type()
+
+                    try:
                         create_submission_file(prefix,
                                                forecast_date,
                                                model,
+                                               data,
                                                places,
                                                forecast_config['submit_args'])
-                    except Exception as e:
-                        print(f"failed to create submission file. Exception is\n{str(e)}")
+                    except Exception:
+                        print(f"failed to create submission file. Exception info:")
+                        traceback.print_exc()
                 
 
                 # Publish to web server 
@@ -177,7 +189,27 @@ if __name__ == "__main__":
                         cmd = f"./publish.sh {output_dir} {forecast_group}/{model_config_name} {host} {dest}"
                         os.system(cmd)
                         
-                    except Exception as e:
-                        warnings.warn("Failed to publish to web server")
+                    except Exception:
+                        warnings.warn("Failed to publish to web server. Exception info:")
+                        traceback.print_exc()
+
+            elif args.mode == "score":
+
+                data = util.load_data()
+                
+                # Get model instance: used to extract forecast from samples
+                model_config = config['model_configs'][model_config_name]
+                model_type = get_method(model_config['model'])
+
+                summary, details = util.score_forecast(forecast_date,
+                                                       data,
+                                                       model_type=model_type,
+                                                       prefix=prefix,
+                                                       places=places,
+                                                       target="cum death")
+                print(details)
+                print(summary)
+                exit(1)
+
             else:
                 raise ValueError(f"Invalid mode: {args.mode}")
