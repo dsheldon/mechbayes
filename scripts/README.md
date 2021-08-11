@@ -8,15 +8,13 @@ Pattern: <forecast_group>/<model_config_name>/<forecast_date>
 Example: US/renewal/2021-08-01
 ~~~
 
-* A `forecast_group` (e.g., `US`) is defined in [config.json](config.json) and groups
-  forecasts for a set of location made by different models over time.
- 
-  Example `forecast_group`s:
+* A `forecast_group` (e.g., `US`) is defined in [config.json]() and groups
+  forecasts for a set of location made by different models over time. Examples:
   * `US`: for submissions to the US forecast hub, includes US and its states and territories
   * `EU`: for EU forecast hub, includes European countries 
 
 * `model_config_name` (e.g., `renewal`) is a named model configuration, also defined 
-  in [](config.json). A forecast group can have multiple model configurations for
+  in [config.json](). A forecast group can have multiple model configurations for
    comparison.
 
 * `forecast_date` is the date the forecast is made (usually a Sunday).
@@ -31,7 +29,13 @@ summary/			    Model fit summaries for each location
 vis/				    Vis files (html, png)
 ~~~~
 
+Results are pushed to a web server for browsing by (selectively) copying the 
+same folder structure to the web server; `samples` directories are omitted 
+to save space and time copying them. 
+
 # Running weekly forecasts
+
+The main script for launching and collecting forecasts is `launch.py`. The basic steps are:
 
 1. Edit `config.json` if needed
 
@@ -47,12 +51,88 @@ vis/				    Vis files (html, png)
     python launch.py --forecast_group US --num_sundays 1 --mode collect
     ~~~
 
-# 
+4. Check results on web
 
+5. Intervene if needed to fix problems
+
+    a. Identify problem locations (e.g., `MA` and `NY`)
+    
+    b. Back up samples files if you want them
+    ~~~ bash
+    cp US/renewal/2021-08-01/samples/{MA,NY}.npz /some/safe/location
+    ~~~
+
+    c. Selectively re-run forecasts
+    ~~~ bash
+    python launch.py --forecast_group US --num_sundays 1 --model_config_name renewal --places MA NY
+    ~~~
+
+    d. Or replace samples with ones from a different model, then rerun with the `--no-run` option to re-create the forecast plots.
+    ~~~ bash
+    cp US/frozen_21/2021-08-01/samples/{MA,NY}.npz US/renewal/2021-08-01/samples/
+    python launch.py --forecast_group US --num_sundays 1 --model_config_name renewal --places MA NY --no-run    
+    ~~~
+    
+   
 
 # config.json
 
+The best thing to do is take a look at the [config.json]() file to understand how configuration happens.
+
+This is where the following items are defined:
+* `forecast_groups` (includes parameters of submission files)
+* `model_config_names` (includes model name and parameters)
+
+An example named model configuration is:
+
+~~~ json
+"renewal": {
+    "model": "mechbayes.models.SEIRD_renewal.SEIRD",
+    "args"  : {
+        "gamma_shape":  1000,
+        "sigma_shape":  1000,
+        "resample_high": 80,
+        "rw_use_last": 10,
+        "rw_scale": 1e-1,
+        "H_duration_est": 25.0
+    }
+}
+~~~~
+
+Here `model` refers to the constructor method of the class used for forecasting:
+* This example refers to the class `SEIRD` defined in [mechbayes/models/SEIRD_renewal.py](../mechbayes/models/SEIRD_renewal.py).
+* The class should always inherit from `mechbayes.models.Model` (and usually from `mechbayes.models.SEIRDModel`), defined in [mechbayes/models/base.py](../mechbayes/models/base.py).
+
+
+An example `forecast_group` definition is:
+
+~~~ json
+"US": {
+    "region": "US_and_states_sorted",
+    "start" : "2020-03-04",
+    "model_configs" : ["renewal", "llonger_H_fix", "frozen_21", "frozen_28"],
+    "submit" : true,
+    "submit_args": {
+        "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.45, 0.50,
+                      0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
+        "num_weeks" : 4,
+        "targets" : ["inc death", "cum death"],
+        "location_codes" : "US Forecast Hub",
+        "team_name" : "UMass",
+        "model_name" : "MechBayes"
+    },
+    "publish": true,
+    "publish_args": {
+      "host" : "doppler",
+      "dest":  "/var/www/html/covid"
+    }
+}
+~~~
+
+
 # launch.py
+
+This is the main script use for launching and collecting forecasts. The options are:
 
 ~~~ text
 usage: launch.py [-h] [--config_file CONFIG_FILE] [--mode {launch,collect,test}] [--forecast_group FORECAST_GROUP]
@@ -98,6 +178,11 @@ other optional arguments:
 ~~~
   
 # run_model.py
+
+This is the script for launching one model run (on a single location and forecast date)
+and is called by `launch.py`.
+
+A user might call it directly only for model development or testing.
 
 ~~~ text
 usage: run_model.py [-h] [--config_file CONFIG_FILE] [--start START] [--end END] [--prefix PREFIX]
