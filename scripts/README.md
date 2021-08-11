@@ -1,15 +1,5 @@
 # Folder structure
 
-One model run produces a set of forecasts for many places on a single
-forecast date and produces a number of outputs in one directory:
-
-~~~~ text
-2021-07-25-UMass-MechBayes.csv	    Submission file
-samples/			    Posterior/forecast samples for each location
-summary/			    Model fit summaries for each location
-vis/				    Vis files (html, png)
-~~~~
-
 The scripts in this directory work with model runs organized hierarchically 
 into folders like this:
 
@@ -18,21 +8,28 @@ Pattern: <forecast_group>/<model_config_name>/<forecast_date>
 Example: US/renewal/2021-08-01
 ~~~
 
-* Forecast groups are defined in [config.json](config.json), and group forecasts 
-  for the same set of places made by different models over time.
+* A `forecast_group` (e.g., `US`) is defined in [config.json](config.json) and groups
+  forecasts for a set of location made by different models over time.
  
-  Examples:
-  * the `US` forecast group is for submissions to the US forecast hub; it
-    includes the US and its states and territories
-
-  * the `EU` forecast group is for the EU forecast hub; it includes European countries 
+  Example `forecast_group`s:
+  * `US`: for submissions to the US forecast hub, includes US and its states and territories
+  * `EU`: for EU forecast hub, includes European countries 
 
 * `model_config_name` (e.g., `renewal`) is a named model configuration, also defined 
-  in [](config.json). A forecast group may include multiple named model configurations 
-  for comparison.
+  in [](config.json). A forecast group can have multiple model configurations for
+   comparison.
 
 * `forecast_date` is the date the forecast is made (usually a Sunday).
 
+One directory contains the result of a model run for all places on that
+`forecast_date`, e.g., the directory `US/renewal/2021-08-01` has these contents:
+
+~~~~ text
+2021-08-01-UMass-MechBayes.csv	    Submission file
+samples/			    Posterior/forecast samples for each location
+summary/			    Model fit summaries for each location
+vis/				    Vis files (html, png)
+~~~~
 
 # Running weekly forecasts
 
