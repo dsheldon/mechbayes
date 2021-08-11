@@ -533,8 +533,8 @@ def score_place(forecast_date,
         raise ValueError(f"unreognized value for freq: {freq}")
 
     assert obs.index.equals(samples.index)
-
-    horizon = (obs.index - forecast_date)/time_unit
+    target_date = obs.index
+    horizon = (target_date - forecast_date)/time_unit    
 
     # only score the requested periods
     if periods is not None:
@@ -542,29 +542,27 @@ def score_place(forecast_date,
         samples = samples.loc[horizon <= periods]
         target_end_date = target_end_date[horizon <= periods]
 
-    # Construct output data frame
-    scores = pd.DataFrame(index=obs.index)
-    scores['target'] = target
-    scores['forecast_date'] = forecast_date
-    scores['target_end_date'] = target_end_date
-    scores['time_unit'] = freq
-    scores['horizon'] = (scores.index - scores['forecast_date'])/time_unit
-    scores['place'] = place
-    
-    # Compute MAE
-    point_forecast = samples.median(axis=1)
-    scores['err'] = obs - point_forecast
 
-    # Compute log-score
+    # Compute metrics
+    point_forecast = samples.median(axis=1)
+    err = obs - point_forecast
     n_samples = samples.shape[1]
     within_100 = samples.sub(obs, axis=0).abs().lt(100)
     prob = (within_100.sum(axis=1)/n_samples)
     log_score = prob.apply(np.log).clip(lower=-10).rename('log score')
-    scores['log_score'] = log_score
+    quantile = samples.lt(obs, axis=0).sum(axis=1) / n_samples
 
-    # Compute quantile of observed value in samples
-    n_samples = samples.shape[1]
-    scores['quantile'] = samples.lt(obs, axis=0).sum(axis=1) / n_samples
+    # Construct output data frame
+    scores = pd.DataFrame( {'target' : target,
+                            'forecast_date': forecast_date,
+                            'target_end_date': target_end_date,
+                            'time_unit' : freq,
+                            'horizon' : horizon,
+                            'place' : place,
+                            'err' : pd.Series(obs - point_forecast, dtype='float'),
+                            'log_score' : pd.Series(log_score, dtype='float'),
+                            'quantile' : pd.Series(quantile, dtype='float')},
+                            index=obs.index)
 
     return scores
 
@@ -582,7 +580,7 @@ def score_forecast(forecast_date,
         places = list(data.keys())
 
     # Assemble performance metrics each place and time horizon
-    details = pd.DataFrame()
+    scores = pd.DataFrame()
     
     print(f'Scoring {target} for all places for {forecast_date} forecast')
     
@@ -602,57 +600,47 @@ def score_forecast(forecast_date,
             warnings.warn(f'Could not score {place}: {e}')
             traceback.print_exc()
         else:
-            details = details.append(place_df)
+            scores = scores.append(place_df)
 
-        
-    # Now summarize over places for each time horizon
-    dates = details.index.unique()
-    summary = pd.DataFrame(index=dates)
+    return scores
 
-    if freq == "week":
-        time_unit = pd.Timedelta("1w")
-    elif freq == "day":
-        time_unit = pd.Timedelta("1d")
-    else:
-        raise ValueError("invalid freq: {freq}")
-    
-    for date in dates:
-        
-        horizon = int((date-pd.to_datetime(forecast_date))/time_unit)
-        rows = details.loc[date]
+def aggregate_scores(scores):
 
-        # copy these columns from the first row for the given date
-        for col in ['target', 'forecast_date', 'target_end_date', 'time_unit', 'horizon']:
-            summary.loc[date, col] = rows.iloc[0][col]
-        
-        if len(places) > 1:
-            # Compute signed error / bias
-            summary.loc[date, 'signed_err'] = rows['err'].mean()
-        
-            # Compute MAE
-            summary.loc[date, 'MAE'] = rows['err'].abs().mean()
-        
-            # Compute MAE
-            summary.loc[date, 'medAE'] = rows['err'].abs().median()
+    # Fields are
+    #   target
+    #   forecast_date
+    #   target_end_date
+    #   time_unit
+    #   horizon
+    #   place
+    #   err
+    #   log_score
+    #   quantile
+    #
+    # Group by
+    #   target
+    #   horizon
+    #   
+    # Aggregate
+    #   err
+    #   log_score
+    #   quantile
 
-            # Compute avg. log-score
-            summary.loc[date, 'log_score'] = rows['log_score'].mean()
-        
-            # Compute KS statistic
-            ks, pval = scipy.stats.kstest(rows['quantile'], 'uniform')
-            summary.loc[date,'KS'] = ks
-            summary.loc[date,'KS_pval'] = pval
+    # scores = scores.copy(deep=True)
+    # scores = scores[['target', 'time_unit', 'horizon', 'err', 'log_score', 'quantile']]    
+    # scores['abs_err'] = scores['err'].abs()
 
-        else:
-            # Compute signed error / bias
-            summary.loc[date, 'signed_err'] = rows['err']
+    def myagg(s): 
+        ks, pval = scipy.stats.kstest(s['quantile'], 'uniform')
+        return pd.Series({
+            'count': len(s),
+            'signed_err' : s['err'].mean(),
+            'MAE' : s['err'].abs().mean(),
+            'medAE' : s['err'].abs().median(),
+            'log_score' : s['log_score'].mean(),
+            'KS' : ks,
+            'KS_pval' : pval
+        })
 
-            # Compute MAE
-            summary.loc[date, 'MAE'] = rows['err']
-
-            # Compute avg. log-score
-            summary.loc[date, 'log_score'] = rows['log_score']
-        
-    summary['forecast_date'] = forecast_date
-    
-    return summary, details
+    summary = scores.groupby(['target', 'time_unit', 'horizon']).apply(myagg).reset_index()
+    return summary

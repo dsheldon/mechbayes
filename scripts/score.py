@@ -11,7 +11,7 @@ import mechbayes.util as util
 
 from vis_util import install_vis
 from submit_util import create_submission_file
-from run_util import load_config, get_method
+from run_util import load_config, get_method, do_publish
 
 
 if __name__ == "__main__":
@@ -65,15 +65,16 @@ if __name__ == "__main__":
 
     data = util.load_data()
 
+    # Only eval forecast dates that have weekahead data
+    forecast_dates = [d for d in forecast_dates 
+                      if pd.to_datetime("today") >= pd.to_datetime(d) + pd.Timedelta("6d")]
+
     # First loop: write details and summary files for each model_config and forecast date
     do_raw = False
     if do_raw:
         for model_config_name in model_config_names:
             for forecast_date in forecast_dates:
                 prefix = f'{output_dir}/{forecast_group}/{model_config_name}/{forecast_date}'
-
-                if pd.to_datetime("today") < pd.to_datetime(forecast_date) + pd.Timedelta("6d"):
-                    continue    # no truth data availble yet
 
                 # Get model instance: used to extract forecast from samples
                 model_config = config['model_configs'][model_config_name]
@@ -83,50 +84,57 @@ if __name__ == "__main__":
                 pad_strategy = score_args.get('pad_strategy') or 'shift'
                 num_weeks = score_args.get('num_weeks') or 4
 
-                summary = pd.DataFrame()
-                details = pd.DataFrame()
+                scores = pd.DataFrame()
 
                 for target in score_args['targets']:
 
                     # score all available weeks
-                    target_summary, target_details = util.score_forecast(forecast_date,
-                                                                         data,
-                                                                         places=places,
-                                                                         model_type=model_type,
-                                                                         prefix=prefix,
-                                                                         target=target,
-                                                                         freq="week",
-                                                                         periods=num_weeks,
-                                                                         pad_strategy=pad_strategy)
+                    target_scores = util.score_forecast(forecast_date,
+                                                         data,
+                                                         places=places,
+                                                         model_type=model_type,
+                                                         prefix=prefix,
+                                                         target=target,
+                                                         freq="week",
+                                                         periods=num_weeks,
+                                                         pad_strategy=pad_strategy)
 
-                    summary = pd.concat([summary, target_summary])
-                    details = pd.concat([details, target_details])
+                    scores = pd.concat([scores, target_scores])
 
+                summary = util.aggregate_scores(scores)
 
-                path = Path(prefix) / 'eval'
-                path.mkdir(parents=True, exist_ok=True)
-                summary.to_csv(path / f'summary.csv', float_format="%.4f")
-                details.to_csv(path / f'details.csv', float_format="%.4f")
+                summary.to_csv(f"{prefix}/eval.csv", float_format="%.4f", index=False)
+                scores.to_csv(f"{prefix}/scores.csv", float_format="%.4f", index=False)
 
 
     # Second loop: aggregate over forecast dates and models
+    start = forecast_dates[0]
+    end = forecast_dates[-1]
     overall_summary = pd.DataFrame()
     for model_config_name in model_config_names:
         
-        model_config_summary = pd.DataFrame()
-        model_config_details = pd.DataFrame()
+        model_config_scores = pd.DataFrame()
 
         for forecast_date in forecast_dates:
-            if pd.to_datetime("today") < pd.to_datetime(forecast_date) + pd.Timedelta("6d"):
-                continue    # no truth data availble yet
 
             prefix = f'{output_dir}/{forecast_group}/{model_config_name}/{forecast_date}'
             print(f"Reading scores for {prefix}")
             
-            summary = pd.read_csv(f"{prefix}/eval/summary.csv")
-            details = pd.read_csv(f"{prefix}/eval/details.csv")            
-
-            model_config_summary = pd.concat([model_config_summary, summary])
-            model_config_details = pd.concat([model_config_details, details])
+            scores = pd.read_csv(f"{prefix}/scores.csv")
+            model_config_scores = pd.concat([model_config_scores, scores])
         
-        print(model_config_summary)
+        model_config_summary = util.aggregate_scores(model_config_scores)
+        model_config_summary.insert(0, 'model', model_config_name)
+        model_config_summary.to_csv(f"{output_dir}/{forecast_group}/{model_config_name}/eval_{start}_{end}.csv", 
+                                    float_format="%.4f",
+                                    index=False)
+
+        overall_summary = pd.concat([overall_summary, model_config_summary])
+
+    overall_summary.to_csv(f"{output_dir}/{forecast_group}/eval_{start}_{end}.csv", 
+                           float_format="%.4f",
+                           index=False)
+
+    if forecast_config['publish']:
+        do_publish(output_dir, forecast_config, forecast_group)
+

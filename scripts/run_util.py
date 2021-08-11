@@ -1,6 +1,7 @@
 import importlib
 import json
 import traceback
+import os
 
 '''Utilities for running the model'''
 def load_config(filename):
@@ -22,13 +23,20 @@ def get_method(method_name):
     method = getattr(module, method_name)
     return method
 
-def do_publish(forecast_config):
+def do_publish(output_dir, forecast_config, forecast_group, model_config_name=None, forecast_date=None):
     print(f"Publishing to web server")
     try:
         publish_args = forecast_config['publish_args']
         host = publish_args['host']
         dest = publish_args['dest']
-        cmd = f"./publish.sh {output_dir} {forecast_group}/{model_config_name} {host} {dest}"
+        
+        subdir = forecast_group
+        if model_config_name:
+            subdir = "f{subdir}/{model_config_name}"
+        if model_config_name and forecast_date:
+            subdir = f"{subdir}/{forecast_date}"
+
+        cmd = f"./publish.sh {output_dir} {subdir} {host} {dest}"
         os.system(cmd)
 
     except Exception:

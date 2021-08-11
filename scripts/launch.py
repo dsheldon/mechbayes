@@ -181,7 +181,7 @@ if __name__ == "__main__":
 
                 # Publish to web server 
                 if forecast_config['publish']:
-                    do_publish(forecast_config)
+                    do_publish(output_dir, forecast_config, model_config_name, forecast_date)
 
             else:
                 raise ValueError(f"Invalid mode: {args.mode}")
