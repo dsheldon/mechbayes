@@ -9,7 +9,7 @@ Example: US/renewal/2021-08-01
 ~~~
 
 * A `forecast_group` (e.g., `US`) is defined in [config.json]() and groups
-  forecasts for a set of location made by different models over time. Examples:
+  forecasts for a set of locations made by different models over time. Examples:
   * `US`: for submissions to the US forecast hub, includes US and its states and territories
   * `EU`: for EU forecast hub, includes European countries 
 
@@ -19,19 +19,20 @@ Example: US/renewal/2021-08-01
 
 * `forecast_date` is the date the forecast is made (usually a Sunday).
 
-One directory contains the result of a model run for all places on that
-`forecast_date`, e.g., the directory `US/renewal/2021-08-01` has these contents:
-
+A single directory, e.g., `US/renewal/2021-08-01` has these contents:
 ~~~~ text
-2021-08-01-UMass-MechBayes.csv	    Submission file
-samples/			    Posterior/forecast samples for each location
-summary/			    Model fit summaries for each location
-vis/				    Vis files (html, png)
+2021-08-01-UMass-MechBayes.csv	    # Submission file
+samples/			    # Posterior/forecast samples for each location
+summary/			    # Model fit summaries for each location
+vis/				    # Vis files (html, png)
 ~~~~
+These comprise the output of the `renewal` model for all places from the `US`
+forecast group for forecast date `2021-08-01`.
 
-Results are pushed to a web server for browsing by (selectively) copying the 
-same folder structure to the web server; `samples` directories are omitted 
-to save space and time copying them. 
+
+Results are pushed to a web server for browsing by (selectively) copying this folder
+structure to a web server (`samples` directories are omitted 
+to save space/time).
 
 # Running weekly forecasts
 
