@@ -79,11 +79,11 @@ The main script for launching and collecting forecasts is `launch.py`. The basic
 
 The best thing to do is take a look at the [config.json]() file to understand how configuration happens.
 
-This is where the following items are defined:
-* `forecast_groups` (includes parameters of submission files)
-* `model_config_names` (includes model name and parameters)
+Two important named entities are defined there:
+* `model_config` (includes model name and parameters)
+* `forecast_group` (includes parameters of submission files)
 
-An example named model configuration is:
+An example model configuration is:
 
 ~~~ json
 "renewal": {
@@ -99,12 +99,14 @@ An example named model configuration is:
 }
 ~~~~
 
-Here `model` refers to the constructor method of the class used for forecasting:
-* This example refers to the class `SEIRD` defined in [mechbayes/models/SEIRD_renewal.py](../mechbayes/models/SEIRD_renewal.py).
-* The class should always inherit from `mechbayes.models.Model` (and usually from `mechbayes.models.SEIRDModel`), defined in [mechbayes/models/base.py](../mechbayes/models/base.py).
+It specifies the model and its arguments. 
+
+`model` gives the constructor method of the class that implements the model:
+* In this case, it is the class `SEIRD` defined in [mechbayes/models/SEIRD_renewal.py](../mechbayes/models/SEIRD_renewal.py).
+* The class should inherit from `mechbayes.models.Model` (and usually from `mechbayes.models.SEIRDModel`), defined in [mechbayes/models/base.py](../mechbayes/models/base.py).
 
 
-An example `forecast_group` definition is:
+An example forecast group is:
 
 ~~~ json
 "US": {
