@@ -81,7 +81,10 @@ def clean(data, forecast_date):
 
     
     '''Adjustments for one-off irregularities'''
-    
+
+    util.redistribute(data['IA']['data'], '2021-07-07', 950, -1, 'confirmed')
+
+
     # JHU
     util.redistribute(data['TX']['data'], '2021-08-06', 7634, 60, 'confirmed')
 
@@ -206,6 +209,12 @@ def clean(data, forecast_date):
     util.redistribute(data['NJ']['data'], '2021-05-05', 1295-98, 90, 'confirmed')
 
     util.redistribute(data['IA']['data'], '2021-05-06', 15, 5, 'death')
+
+    # OK 4-7 spike
+    util.redistribute(data['OK']['data'], '2021-04-07', (1716-103), 300, 'death') # big spike on 04-07: JHU
+    util.redistribute(data['US']['data'], '2021-04-07', (1716-103), 300, 'death') # also at US level
+    util.redistribute(data['OK']['data'], '2021-04-07', 1300, 300, 'confirmed') # case spike OK
+    util.redistribute(data['US']['data'], '2021-04-07', 1300, 300, 'confirmed') # case spike US
 
     # possible weird effects of weekend cycle
     util.redistribute(data['NM']['data'], '2021-04-05', 443*2//3, 2, 'confirmed')

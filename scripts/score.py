@@ -30,6 +30,12 @@ if __name__ == "__main__":
     override_args.add_argument('--output_dir', help='output directory')
     override_args.add_argument('--model_configs', nargs="+", help='model configuration names')
 
+    other_args = parser.add_argument_group("other options")
+    other_args.add_argument('--scores', help="compute raw scores", dest='do_scores', action='store_true', default=True)
+    other_args.add_argument('--no-scores', help="update summaries without computing raw scores", dest='do_scores', action='store_false')
+    other_args.set_defaults(do_scores=True)
+
+
 
     args = parser.parse_args()
 
@@ -70,10 +76,10 @@ if __name__ == "__main__":
                       if pd.to_datetime("today") >= pd.to_datetime(d) + pd.Timedelta("6d")]
 
     # First loop: write details and summary files for each model_config and forecast date
-    do_raw = False
-    if do_raw:
+    if args.do_scores:
         for model_config_name in model_config_names:
             for forecast_date in forecast_dates:
+                print(f"Scoring {model_config_name} for {forecast_date}")
                 prefix = f'{output_dir}/{forecast_group}/{model_config_name}/{forecast_date}'
 
                 # Get model instance: used to extract forecast from samples
@@ -108,6 +114,7 @@ if __name__ == "__main__":
 
 
     # Second loop: aggregate over forecast dates and models
+    print(f"Aggregating scores")
     start = forecast_dates[0]
     end = forecast_dates[-1]
     overall_summary = pd.DataFrame()

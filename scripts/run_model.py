@@ -32,7 +32,8 @@ if __name__ == "__main__":
     forecast_date = args.end
 
     data = util.load_data()
-    data_cleaning.clean(data, forecast_date)
+    clean_to_date = forecast_date if args.run else data['US']['data'].index[-1]
+    data_cleaning.clean(data, clean_to_date)
 
     if args.run:
         util.run_place(data,

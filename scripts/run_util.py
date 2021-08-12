@@ -32,7 +32,7 @@ def do_publish(output_dir, forecast_config, forecast_group, model_config_name=No
         
         subdir = forecast_group
         if model_config_name:
-            subdir = "f{subdir}/{model_config_name}"
+            subdir = f"{subdir}/{model_config_name}"
         if model_config_name and forecast_date:
             subdir = f"{subdir}/{forecast_date}"
 

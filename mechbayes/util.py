@@ -225,7 +225,7 @@ def smooth_to_weekly(data, forecast_date, place, var, start_date, end_date=None)
     # if we didn't explicitly stop smoothing (e.g., because location
     # went back to daily reporting), assume all observations after
     # final weekly reporting date are missing
-    if end_date is None:
+    if end_date is None and len(reporting_dates) > 0:
         last_reporting_date = reporting_dates[-1]
         series[last_reporting_date + pd.Timedelta('1d'):] = onp.nan
 

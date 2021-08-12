@@ -39,6 +39,8 @@ if __name__ == "__main__":
     other_args.add_argument('--run', help="run model (default)", dest='run', action='store_true', default=True)
     other_args.add_argument('--no-run', help="update plots without running model", dest='run', action='store_false')
     other_args.set_defaults(run=True)
+    other_args.add_argument('--no-submission', help="skip creating submission file", dest='submission', action='store_false')
+    other_args.set_defaults(submission=True)
 
     other_args.add_argument('--sbatch', help="launch jobs with sbatch (default)", dest='sbatch', action='store_true')
     other_args.add_argument('--no-sbatch', help="run jobs locally", dest='sbatch', action='store_false')
@@ -156,7 +158,7 @@ if __name__ == "__main__":
 
 
                 # Create submission file
-                if forecast_config['submit']:
+                if forecast_config['submission'] and args.submission:
 
                     # JHU data is used to pad incident forecasts with a value for Sunday
                     # of the forecast week
@@ -173,7 +175,7 @@ if __name__ == "__main__":
                                                model,
                                                data,
                                                places,
-                                               forecast_config['submit_args'])
+                                               forecast_config['submission_args'])
                     except Exception:
                         print(f"failed to create submission file. Exception info:")
                         traceback.print_exc()
@@ -181,7 +183,7 @@ if __name__ == "__main__":
 
                 # Publish to web server 
                 if forecast_config['publish']:
-                    do_publish(output_dir, forecast_config, model_config_name, forecast_date)
+                    do_publish(output_dir, forecast_config, forecast_group, model_config_name, forecast_date)
 
             else:
                 raise ValueError(f"Invalid mode: {args.mode}")
