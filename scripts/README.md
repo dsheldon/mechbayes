@@ -21,14 +21,20 @@ Example: US/renewal/2021-08-01
 
 A single directory, e.g., `US/renewal/2021-08-01` has these contents:
 ~~~~ text
-2021-08-01-UMass-MechBayes.csv	    # Submission file
 samples/			    # Posterior/forecast samples for each location
 summary/			    # Model fit summaries for each location
 vis/				    # Vis files (html, png)
+2021-08-01-UMass-MechBayes.csv	    # Submission file
 ~~~~
 These comprise the output of the `renewal` model for all places from the `US`
-forecast group for forecast date `2021-08-01`.
+forecast group for forecast date `2021-08-01`. 
 
+Later, scoring information is also put in the directory:
+
+~~~~ text
+scores.csv			    # Forecast scores for each place
+eval.csv			    # Summary evaluation (aggregates over places)
+~~~~
 
 Results are pushed to a web server for browsing by (selectively) copying this folder
 structure to a web server (`samples` directories are omitted 
@@ -201,6 +207,59 @@ other optional arguments:
   --sleep SLEEP         seconds to sleep between sbatch calls (default: 0.1)
 ~~~
   
+# score.py
+
+This script has options similar to launch.py. 
+
+After truth data is available, it scores forecasts and populates the output 
+directory with csv files with results. The results include raw scores and 
+aggreate scores at different levels.
+
+Example score files are:
+
+~~~~ text
+US/renewal/2021-08-01/scores.csv	    # Forecast scores for each place
+US/renewal/2021-08-01/eval.csv 		    # Summary evaluation (aggregates over places)
+
+US/renewal/eval_2021-06-06_2021-08-01.csv   # Summary 2021-06-06 to 2021-08-01
+
+US/eval_2021-06-06_2021-08-01.csv           # Summary 2021-06-06 to 2021-08-01
+					    # for multiple models
+~~~~
+
+
+
+
+usage: score.py [-h] [--config_file CONFIG_FILE] [--forecast_group FORECAST_GROUP]
+                [--num_sundays NUM_SUNDAYS]
+                [--forecast_dates FORECAST_DATES [FORECAST_DATES ...]] [--output_dir OUTPUT_DIR]
+                [--model_configs MODEL_CONFIGS [MODEL_CONFIGS ...]] [--scores] [--no-scores]
+
+Launch or collect forecasts (named arguments refer to config file)
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+main arguments:
+  --config_file CONFIG_FILE
+                        configuration file (default: config.json)
+  --forecast_group FORECAST_GROUP
+                        name of forecast group
+  --num_sundays NUM_SUNDAYS
+                        forecast for last n sundays
+  --forecast_dates FORECAST_DATES [FORECAST_DATES ...]
+                        forecast for specific dates
+
+to manually set or override config file options:
+  --output_dir OUTPUT_DIR
+                        output directory
+  --model_configs MODEL_CONFIGS [MODEL_CONFIGS ...]
+                        model configuration names
+
+other options:
+  --scores              compute raw scores
+  --no-scores           update summaries without computing raw scores
+
 # run_model.py
 
 This is the script for launching one model run (on a single location and forecast date)
