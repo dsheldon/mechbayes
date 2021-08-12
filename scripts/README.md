@@ -42,6 +42,20 @@ to save space/time).
 
 # Running weekly forecasts
 
+## Before: Data Cleaning
+
+Most of the weekly data cleaning work is now automated, but it will probably
+remain useful to look for and address serious data issues prior to running forecasts.
+
+* Check visualization of previous week's forecasts compared to truth data to
+  look for obvious outliers in truth data
+* Also review JHU weekly report of data problems
+* Keep a checklist of possible issues
+* Use [Data Cleaning.ipynb]() on your machine to inspect issues and make fixes if needed
+* Put fixes in [data_cleaning.py](). Make sure changes are propagated to
+  where you will run the model.
+
+## Running Forecasts
 The main script for launching and collecting forecasts is `launch.py`. The basic steps are:
 
 1. Edit `config.json` if needed
@@ -94,6 +108,29 @@ The main script for launching and collecting forecasts is `launch.py`. The basic
     You can supply multiple model configuration names in the commands above to re-run multiple models,
     or supply none to rerun all models.
     
+## After: Scoring
+
+Once truth data is available, you can use `score.py` for evaluation. 
+
+You will typically want to run this command once per week after new 
+truth data is available:
+
+~~~ bash
+python score.py --forecast_group US --num_sundays 5
+~~~
+
+This scores the last 5 weekly forecasts at all available horizons. 
+The most week is skipped because truth data is not yet available
+After 5 weeks, no further truth data is available for old forecasts.
+
+
+To create summary evaluations over longer time periods without rescoring
+individual forecasts (which is slow), do this:
+
+~~~ bash
+python score.py --forecast_group US --num_sundays 10 --no-scores
+~~~
+
 
 # config.json
 
@@ -227,9 +264,9 @@ US/eval_2021-06-06_2021-08-01.csv           # Summary 2021-06-06 to 2021-08-01
 					    # for multiple models
 ~~~~
 
+The script usage is:
 
-
-
+~~~~ text
 usage: score.py [-h] [--config_file CONFIG_FILE] [--forecast_group FORECAST_GROUP]
                 [--num_sundays NUM_SUNDAYS]
                 [--forecast_dates FORECAST_DATES [FORECAST_DATES ...]] [--output_dir OUTPUT_DIR]
@@ -259,6 +296,8 @@ to manually set or override config file options:
 other options:
   --scores              compute raw scores
   --no-scores           update summaries without computing raw scores
+~~~~
+
 
 # run_model.py
 
