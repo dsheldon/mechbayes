@@ -11,4 +11,4 @@ if [[ $# -lt 2 ]] ; then
 fi
 
 ssh $HOST mkdir -p $DST
-rsync -avz --relative --exclude="*samples*" $ROOT/./$SUBDIR/ $HOST:$DST/
+rsync -avz --chmod=ug=rwX --relative --exclude="*samples*" $ROOT/./$SUBDIR/ $HOST:$DST/
