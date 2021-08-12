@@ -114,8 +114,8 @@ An example forecast group is:
     "region": "US_and_states_sorted",
     "start" : "2020-03-04",
     "model_configs" : ["renewal", "llonger_H_fix", "frozen_21", "frozen_28"],
-    "submit" : true,
-    "submit_args": {
+    "submission" : true,
+    "submission_args": {
         "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.45, 0.50,
                       0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
         "num_weeks" : 4,
