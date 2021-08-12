@@ -8,13 +8,13 @@ Pattern: <forecast_group>/<model_config_name>/<forecast_date>
 Example: US/renewal/2021-08-01
 ~~~
 
-* A `forecast_group` (e.g., `US`) is defined in [config.json]() and groups
+* A `forecast_group` (e.g., `US`) is defined in [config.json](config.json) and groups
   forecasts for a set of locations made by different models over time. Examples:
   * `US`: for submissions to the US forecast hub, includes US and its states and territories
   * `EU`: for EU forecast hub, includes European countries 
 
 * `model_config_name` (e.g., `renewal`) is a named model configuration, also defined 
-  in [config.json](). A forecast group can have multiple model configurations for
+  in [config.json](config.json). A forecast group can have multiple model configurations for
    comparison.
 
 * `forecast_date` is the date the forecast is made (usually a Sunday).
@@ -51,8 +51,8 @@ remain useful to look for and address serious data issues prior to running forec
   look for obvious outliers in truth data
 * Also review JHU weekly report of data problems
 * Keep a checklist of possible issues
-* Use [Data Cleaning.ipynb]() on your machine to inspect issues and make fixes if needed
-* Put fixes in [data_cleaning.py](). Make sure changes are propagated to
+* Use [Data Cleaning.ipynb](Data%20Cleaning.ipynb) on your machine to inspect issues and make fixes if needed
+* Put fixes in [data_cleaning.py](data_cleaning.py). Make sure changes are propagated to
   where you will run the model.
 
 ## Running Forecasts
@@ -134,7 +134,7 @@ python score.py --forecast_group US --num_sundays 10 --no-scores
 
 # config.json
 
-The best thing to do is take a look at the [config.json]() file to understand how configuration happens.
+The best thing to do is take a look at the [config.json](config.json) file to understand how configuration happens.
 
 Two important named entities are defined there:
 * `model_config` (includes model name and parameters)
