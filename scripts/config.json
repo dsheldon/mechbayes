@@ -2,8 +2,9 @@
     "output_dir" : "/mnt/nfs/work1/sheldon/sheldon/mechbayes",
 
     "model_configs" : {
-        
+
         "renewal": {
+	    "comment": "vanilla renewal model to match operational MB",
             "model": "mechbayes.models.SEIRD_renewal.SEIRD",
             "args"  : {
                 "gamma_shape":  1000,
@@ -15,7 +16,50 @@
             }
         },
 
+        "renewal_14": {
+	    "comment": "renewal model with contact rate frozen for last 14 days",
+            "model": "mechbayes.models.SEIRD_renewal.SEIRD",
+            "args"  : {
+                "gamma_shape":  1000,
+                "sigma_shape":  1000,
+                "resample_high": 80,
+                "rw_use_last": 10,
+                "rw_scale": 1e-1,
+                "H_duration_est": 25.0,
+		"num_frozen" : 14
+            }
+        },
+
+        "renewal_21": {
+	    "comment": "renewal model with contact rate frozen for last 21 days",
+            "model": "mechbayes.models.SEIRD_renewal.SEIRD",
+            "args"  : {
+                "gamma_shape":  1000,
+                "sigma_shape":  1000,
+                "resample_high": 80,
+                "rw_use_last": 10,
+                "rw_scale": 1e-1,
+                "H_duration_est": 25.0,
+		"num_frozen" : 21
+            }
+        },
+
+        "renewal_28": {
+	    "comment": "renewal model with contact rate frozen for last 28 days",
+            "model": "mechbayes.models.SEIRD_renewal.SEIRD",
+            "args"  : {
+                "gamma_shape":  1000,
+                "sigma_shape":  1000,
+                "resample_high": 80,
+                "rw_use_last": 10,
+                "rw_scale": 1e-1,
+                "H_duration_est": 25.0,
+		"num_frozen" : 28
+            }
+        },
+
         "llonger_H_fix": {
+	    "comment": "former operational MB model (diff. eq, most of 2021)",
             "model": "mechbayes.models.SEIRD.SEIRD",
             "args"  : {
                 "gamma_shape":  1000,
@@ -27,7 +71,22 @@
             }
         },
 
+        "frozen_14": {
+	    "comment": "former operational MB model with contact rate frozen for last 14 days",
+            "model": "mechbayes.models.SEIRD.SEIRD",
+            "args"  : {
+                "gamma_shape":  1000,
+                "sigma_shape":  1000,
+                "resample_high": 80,
+                "rw_use_last": 10,
+                "rw_scale": 1e-1,
+                "H_duration_est": 25.0,
+                "num_frozen": 14
+            }
+        },
+
         "frozen_21": {
+	    "comment": "former operational MB model with contact rate frozen for last 21 days ",
             "model": "mechbayes.models.SEIRD.SEIRD",
             "args"  : {
                 "gamma_shape":  1000,
@@ -41,6 +100,7 @@
         },
 
         "frozen_28": {
+	    "comment": "former operational MB model with contact rate frozen for last 28 days ",
             "model": "mechbayes.models.SEIRD.SEIRD",
             "args"  : {
                 "gamma_shape":  1000,
@@ -78,17 +138,17 @@
 
     "forecast_groups": {       
 
-        "test": {
+        "compare_US": {
+	    "comment" : "Retrospective model comparison between renewal and diff eq models in early August 2021. Can be retired soon",
             "region": "US_and_states_sorted",
             "start" : "2020-03-04",
-            "model_configs" : ["frozen_21"],
+            "model_configs" : ["llonger_H_fix", "frozen_14", "frozen_21", "frozen_28", "renewal", "renewal_14", "renewal_21", "renewal_28"],
             "submission" : true,
             "submission_args": {
                 "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
                               0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
                 "num_weeks" : 4,
                 "targets" : ["inc death", "cum death"],
-                "location_codes" : "US Forecast Hub",
                 "team_name" : "UMass",
                 "model_name" : "MechBayes"
             },
@@ -104,16 +164,20 @@
         },
 
         "US": {
+	    "comment" : ["For US forecast hub submissions",
+			 " -- submit renewal model",
+			 " -- use renewal_14 as backup",
+			 " -- use llonger_H_fix, frozen_21, frozen_28 as extra backups,",
+			 "    but retire them after 2021-08-15 forecasts"],
             "region": "US_and_states_sorted",
             "start" : "2020-03-04",
-            "model_configs" : ["renewal", "llonger_H_fix", "frozen_21", "frozen_28"],
+            "model_configs" : ["renewal", "renewal_14", "llonger_H_fix", "frozen_21", "frozen_28"],
             "submission" : true,
             "submission_args": {
                 "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.45, 0.50,
                               0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
                 "num_weeks" : 4,
                 "targets" : ["inc death", "cum death"],
-                "location_codes" : "US Forecast Hub",
                 "team_name" : "UMass",
                 "model_name" : "MechBayes"
             },
@@ -121,11 +185,15 @@
 	    "publish_args": {
 		"host" : "doppler",
 		"dest":  "/var/www/html/covid"
+	    },
+	    "score_args": {
+                "num_weeks" : 4,
+                "targets" : ["inc death", "cum death"]
 	    }
         },
 
         "EU": {
-            "region" : "EU",
+	    "comment" : "EU forecast hub submissions",
             "start"  : "2020-03-04",
             "model_configs" : ["llonger_H_fix", "frozen_21"],
             "submission" : true,
@@ -133,8 +201,7 @@
                 "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.45, 0.50,
                               0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
                 "num_weeks" : 4,
-                "targets" : ["inc case", "cum case", "inc death", "cum death"],
-                "location_codes" : "EU Forecast Hub",
+                "targets" : ["inc death"],
                 "team_name" : "UMass",
                 "model_name" : "MechBayes"                
             },
@@ -142,7 +209,12 @@
 	    "publish_args": {
 		"host" : "doppler",
 		"dest":  "/var/www/html/covid"
+	    },
+	    "score_args": {
+                "num_weeks" : 4,
+                "targets" : ["inc death"]
 	    }
+
         }
     }
 }
