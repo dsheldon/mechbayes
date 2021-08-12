@@ -120,7 +120,7 @@ python score.py --forecast_group US --num_sundays 5
 ~~~
 
 This scores the last 5 weekly forecasts at all available horizons. 
-The most week is skipped because truth data is not yet available
+The most recent week is skipped because truth data is not yet available
 After 5 weeks, no further truth data is available for old forecasts.
 
 
