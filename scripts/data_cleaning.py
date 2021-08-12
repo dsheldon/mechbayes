@@ -44,6 +44,7 @@ NO_WEEKEND_DATA = [
     'OK'
 ]
 
+
 def clean(data, forecast_date):
 
     forecast_date = pd.to_datetime(forecast_date)
@@ -57,7 +58,15 @@ def clean(data, forecast_date):
                                                NO_WEEKEND_DATA)
 
 
-    # Take care of states that only report once / week. 
+
+    # Make manual adjustments
+    make_manual_adjustments(data, forecast_date)
+    
+    # Smooth observations to weekly for states that only report once / week.
+    #
+    # Note: in at least one case (OK on 2021-04-07) there is a spike in the
+    # daily data that needs to be adjusted before smoothing to weekly, so this 
+    # step should happen after manual adjustments.
     #
     # Assume reporting happens once/week starting on the specific date. For each
     # reporting date, take the total number reported over the preceding week and 
@@ -79,7 +88,9 @@ def clean(data, forecast_date):
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
 
-    
+
+
+def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
 
     util.redistribute(data['IA']['data'], '2021-07-07', 950, -1, 'confirmed')
