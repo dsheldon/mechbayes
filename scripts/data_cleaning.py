@@ -221,6 +221,10 @@ def make_manual_adjustments(data, forecast_date):
 
     util.redistribute(data['IA']['data'], '2021-05-06', 15, 5, 'death')
 
+    # OK 5-26 spike
+    util.redistribute(data['OK']['data'], '2021-05-26', 333, 90, 'death')
+    util.redistribute(data['US']['data'], '2021-05-26', 333, 90, 'death')
+
     # OK 4-7 spike
     util.redistribute(data['OK']['data'], '2021-04-07', (1716-103), 300, 'death') # big spike on 04-07: JHU
     util.redistribute(data['US']['data'], '2021-04-07', (1716-103), 300, 'death') # also at US level
