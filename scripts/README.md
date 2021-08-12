@@ -74,7 +74,20 @@ The main script for launching and collecting forecasts is `launch.py`. The basic
     python launch.py --forecast_group US --num_sundays 1 --model_config_name renewal --places MA NY --no-run    
     ~~~
     
-   
+    e. Monitor jobs
+    ~~~ bash
+    squeue -u sheldon  # use your username
+    tail -f log/renewal/2021-08-01/MA.err    # to monitor progress of model run
+    ~~~
+    
+    f. After all jobs are complete, re-collect output (to update submission file and vis)
+    ~~~ bash
+    python launch.py --forecast_group US --num_sundays 1 --model_config_name renewal --mode collect    
+    ~~~
+
+    You can supply multiple model configuration names in the commands above to re-run multiple models,
+    or supply none to rerun all models.
+    
 
 # config.json
 
@@ -83,6 +96,14 @@ The best thing to do is take a look at the [config.json]() file to understand ho
 Two important named entities are defined there:
 * `model_config` (includes model name and parameters)
 * `forecast_group` (includes parameters of submission files)
+
+Pay attention to two output paths:
+* `output_dir`: where results are written after running jobs
+* `dest` (under `publish_args` of `forecast_group`): root directory on web server
+
+For testing, individual users probably want to customize these to point to a personal
+sandbox, while for operational forecasts, multiple users may want to write to a shared
+directory.
 
 An example model configuration is:
 
