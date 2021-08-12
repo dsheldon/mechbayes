@@ -132,6 +132,104 @@ def redistribute(df, date, n, k, col='death'):
     df.loc[days, col] += new_cumulative
 
 
+def set_trailing_weekend_zeros_to_missing(data,
+                                          forecast_date,
+                                          no_sunday_data_places,
+                                          no_weekend_data_places):
+    # Set trailing zeros to missing for places that
+    # don't report on weekends. 
+    #
+    # This could potentially be more automated, but
+    # there are issues to understand and constraints
+    # on potential solutions:
+    #
+    # - there may be true zeros. this is rare for
+    #   cases, but fairly common for deaths.
+    #
+    # - we may want to set non-zero values to missing,
+    #   e.g., for US where counts are very low on 
+    #   weekends due to most states not reporting
+    #
+    # - sometimes it is useful to manually adjust
+    #   whether weekend data is present to help fix
+    #   model fitting failures or very poor fits
+    #
+    # Note that we generally don't want to set _non-trailing_
+    # values to missing
+    #
+    # - The raw data is cumulative; setting one value
+    #   to nan in the middle of the time series will
+    #   lead to multiple nans after differencing to get
+    #   incident data.
+    #
+    # - Missing cases/deaths from weekends are reported later,
+    #   e.g., Monday is often a big spike. In the long run, we want
+    #   low counts on weekends to offset larger counts during the
+    #   week to get incidence correct at the weekly level.
+    
+    forecast_date = pd.to_datetime(forecast_date)
+    
+    # Changes data in place. no return value    
+    if forecast_date.dayofweek == 6: # forecast on sunday    
+
+        sunday = forecast_date
+        saturday = forecast_date - pd.Timedelta('1d')
+
+        for place in no_sunday_data_places + no_weekend_data_places:
+            data[place]['data'].loc[sunday, :] = onp.nan
+
+        for place in no_weekend_data_places:
+            data[place]['data'].loc[saturday, :] = onp.nan
+
+    elif forecast_date.dayofweek == 5: # forecast on saturday
+
+        saturday = forecast_date
+        for place in no_weekend_data_places:
+            data[place]['data'].loc[saturday, :] = onp.nan
+
+
+def smooth_to_weekly(data, forecast_date, place, var, start_date, end_date=None):
+
+    to_date = end_date or forecast_date
+    
+    series = data[place]['data'][var]
+    
+    reporting_dates = pd.date_range(start=start_date, end=to_date, freq=pd.Timedelta('1w'))
+
+    for reporting_date in reporting_dates:
+        
+        # get total cases/deaths for week
+        right = reporting_date
+        left = reporting_date - pd.Timedelta("1w")
+        cum_tot = series[right]
+        weekly_tot = series[right] - series[left]
+        
+        # construct incident time series with cases/deaths
+        # spread evenly through week
+        avg = int(weekly_tot // 7)
+        rem = int(weekly_tot % 7)        
+
+        # set each day equal to floor(average)
+        incident = avg * onp.ones(7)
+
+        # add remainder by adding 1 for first rem days in scrambled order
+        scrambled_days = [3, 0, 6, 2, 5, 4, 1]
+        incident[scrambled_days[:rem]] += 1   
+        
+        # now reconstruct cumulative series from incident
+        series[left+pd.Timedelta("1d"):right] = series[left] + onp.cumsum(incident)        
+        
+        assert(series[right] - series[left] == weekly_tot)
+        assert(series[right] == cum_tot)
+    
+    # if we didn't explicitly stop smoothing (e.g., because location
+    # went back to daily reporting), assume all observations after
+    # final weekly reporting date are missing
+    if end_date is None:
+        last_reporting_date = reporting_dates[-1]
+        series[last_reporting_date + pd.Timedelta('1d'):] = onp.nan
+
+            
 """
 ************************************************************
 Plotting

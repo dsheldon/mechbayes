@@ -29,15 +29,16 @@ if __name__ == "__main__":
     config = load_config(args.config_file)
     model_config = config['model_configs'][args.model_config]
     model_type = get_method(model_config['model'])
-    
+    forecast_date = args.end
+
     data = util.load_data()
-    data_cleaning.clean(data)
+    data_cleaning.clean(data, forecast_date)
 
     if args.run:
         util.run_place(data,
                        args.place,
                        start=args.start,
-                       end=args.end,
+                       end=forecast_date,
                        prefix=args.prefix,
                        model_type=model_type,
                        **model_config['args'])

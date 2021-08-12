@@ -1,125 +1,87 @@
-import covid.util as util
+import mechbayes.util as util
+import pandas as pd
 import numpy as onp
 
-def clean(data):
+NO_SUNDAY_DATA = ['ME']
 
-    # MI doesn't report on Sundays
-    #   April  4, 2021 --- add WA
-    #   July  18, 2021 --- add ME
-    for place in ['WA', 'ME']:
-        data[place]['data'].loc['2021-08-08', 'confirmed'] = onp.nan
-        data[place]['data'].loc['2021-08-08', 'death'] = onp.nan
-        pass
+NO_WEEKEND_DATA = [
+    'WA',
+    'RI',
+    'GU',
+    'KS',
+    'CT',
+    'TN',
+    'AK',
+    'LA',
+    'WY',
+    'NC',
+    'ID',
+    'SD',
+    'NV',
+    'WV',
+    'AL',
+    'DC',
+    'MT',
+    'VT',
+    'WI',
+    'SC',
+    'MI',
+    'IL',
+    'KY',
+    'AR',
+    'IN',
+    'NH',
+    'UT',
+    'OR',
+    'MA',
+    'MN',
+    'FL',
+    'GA',
+    'NE',
+    'NM',
+    'VA',
+    'CO',
+    'OK'
+]
 
-    # RI, CT, GU don't report on Saturdays/Sundays
-    #   Oct 19 -- add WI (removed Oct 25)
-    #   Oct 18 -- add KS
-    #   March 14, 2021 --- add TN
-    #   March 21, 2021 --- add AK
-    #   March 28, 2021 --- add LA
-    #   April  4, 2021 --- Add WY
-    #   April  4, 2021 --- (remove WA)
-    #   April 11, 2021 --- add NM, NC
-    #   April 18, 2021 --- add ID
-    #   May   01, 2021 --- add SD
-    #   May   01, 2021 --- add NV
-    #   May   16, 2021 --- add NE
-    #   May   23, 2021 --- add WV
-    #   May   31, 2021 --- add AL
-    #   June  06, 2021 --- add DC, MT, VI, WI
-    #   June  12, 2021 --- add SC
-    #   June  26, 2021 --- add MI, IL, KY
-    #   July  04, 2021 --- add AR, IN, NH, US
-    #   July  05, 2021 --- add UT
-    #   July  11, 2021 --- add GA
-    #   July  12, 2021 --- remove US
-    #   July  18, 2021 --- add OR, MA, MN
-    #   July  25, 2021 --- add VA, CO
-    for place in ['RI', 'GU', 'KS', 'CT', 'TN', 'AK', 'LA', 'WY', 'NC', 'ID', 'SD', 'NV', 'WV', 'AL', 'DC', 'MT', 'VT', 'WI', 'SC', 'MI', 'IL', 'KY', 'AR', 'IN', 'NH', 'UT', 'OR', 'MA', 'MN', 'FL', 'GA', 'NE', 'NM', 'VA', 'CO']:
-        data[place]['data'].loc['2021-08-07', 'confirmed'] = onp.nan
-        data[place]['data'].loc['2021-08-08', 'confirmed'] = onp.nan
-        data[place]['data'].loc['2021-08-07', 'death'] = onp.nan
-        data[place]['data'].loc['2021-08-08', 'death'] = onp.nan
+def clean(data, forecast_date):
+
+    forecast_date = pd.to_datetime(forecast_date)
     
-    # JHU: IA now updating only once per week
-    util.redistribute(data['IA']['data'], '2021-07-07', 950, -1, 'confirmed')
-    util.redistribute(data['IA']['data'], '2021-07-14', 651*4//5, 5, 'confirmed')
-    util.redistribute(data['IA']['data'], '2021-07-14', 9*4//5, 5, 'death')
-    util.redistribute(data['IA']['data'], '2021-07-21', 1395*6//7, 6, 'confirmed')
-    util.redistribute(data['IA']['data'], '2021-07-21', 12*6//7, 6, 'death')
-    util.redistribute(data['IA']['data'], '2021-07-28', 2158*6//7, 6, 'confirmed')
-    util.redistribute(data['IA']['data'], '2021-07-28', 13*6//7, 6, 'death')
-    util.redistribute(data['IA']['data'], '2021-08-04', 3570*6//7, 6, 'confirmed')
-    util.redistribute(data['IA']['data'], '2021-08-04', 10*6//7, 6, 'death')
-    data['IA']['data'].loc['2021-08-05':, 'confirmed'] = onp.nan
-    data['IA']['data'].loc['2021-08-05':, 'death'] = onp.nan
+    '''Adjustments for weekly reporting irregularities. Don't need to update each week'''
     
-    # FL is updating once per week
-    util.redistribute(data['FL']['data'], '2021-06-11', 11454*6//7, 6, 'confirmed')
-    util.redistribute(data['FL']['data'], '2021-06-11', 280*6//7, 6, 'death')
-    util.redistribute(data['FL']['data'], '2021-06-18', 10095*6//7, 6, 'confirmed')
-    util.redistribute(data['FL']['data'], '2021-06-18', 290*6//7, 6, 'death')
-    util.redistribute(data['FL']['data'], '2021-06-25', 11048*6//7, 6, 'confirmed')  # 11048 = # cases on 06-25
-    util.redistribute(data['FL']['data'], '2021-06-25', 217*6//7, 6, 'death')        # 217 = # deaths on 06-25
-    util.redistribute(data['FL']['data'], '2021-07-02', 15684*6//7, 6, 'confirmed')
-    util.redistribute(data['FL']['data'], '2021-07-02', 213*6//7, 6, 'death')
-    util.redistribute(data['FL']['data'], '2021-07-09', 23747*6//7, 6, 'confirmed')
-    util.redistribute(data['FL']['data'], '2021-07-09', 172*6//7, 6, 'death')
-    util.redistribute(data['FL']['data'], '2021-07-16', 45449*6//7, 6, 'confirmed')
-    util.redistribute(data['FL']['data'], '2021-07-16', 231*6//7, 6, 'death')
-    util.redistribute(data['FL']['data'], '2021-07-23', 73166*6//7, 6, 'confirmed')
-    util.redistribute(data['FL']['data'], '2021-07-23', 282*6//7, 6, 'death')
-    util.redistribute(data['FL']['data'], '2021-07-30', 110724*6//7, 6, 'confirmed')
-    util.redistribute(data['FL']['data'], '2021-07-30', 409*6//7, 6, 'death')
-    util.redistribute(data['FL']['data'], '2021-08-06', 134751*6//7, 6, 'confirmed')
-    util.redistribute(data['FL']['data'], '2021-08-06', 616*6//7, 6, 'death')
+    # Set weekends to missing
+    util.set_trailing_weekend_zeros_to_missing(data,
+                                               forecast_date, 
+                                               NO_SUNDAY_DATA, 
+                                               NO_WEEKEND_DATA)
 
-    # OK is updating death data intermittently. Adjust.
-    util.redistribute(data['OK']['data'], '2021-03-09', 147, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-03-16', 73, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-03-24', 62*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-03-31', 103*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-04-07', 103*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-04-07', (1716-103), 300, 'death') # big spike on 04-07: JHU
-    util.redistribute(data['US']['data'], '2021-04-07', (1716-103), 300, 'death') # also at US level
-    util.redistribute(data['OK']['data'], '2021-04-07', 1300, 300, 'confirmed') # case spike OK
-    util.redistribute(data['US']['data'], '2021-04-07', 1300, 300, 'confirmed') # case spike US
-    util.redistribute(data['OK']['data'], '2021-04-14', 28*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-04-21', 19*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-04-28', 72*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-05-05', 44*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-05-12', 46*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-05-19', 40*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-05-26', 40*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-05-26', 333, 90, 'death')
-    util.redistribute(data['US']['data'], '2021-05-26', 333, 90, 'death')
-    util.redistribute(data['OK']['data'], '2021-06-02', 25*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-06-09', 9*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-06-16', 29*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-06-23', 30*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-06-30', 4*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-07-07', 18*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-07-14', 11*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-07-21', 37*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-07-28', 31*6//7, 6, 'death')
-    util.redistribute(data['OK']['data'], '2021-08-04', 46*6//7, 6, 'death')
-    data['OK']['data'].loc['2021-08-05':, 'death'] = onp.nan
 
-    # SD is now reporting once weekly on Wed 
-    util.redistribute(data['SD']['data'], '2021-07-07', 60*4//5, 5, 'confirmed')
-    util.redistribute(data['SD']['data'], '2021-07-14', 98*6//7, 6, 'confirmed')
-    util.redistribute(data['SD']['data'], '2021-07-21', 196*5//6, 5, 'confirmed')
-    util.redistribute(data['SD']['data'], '2021-07-28', 265*6//7, 6, 'confirmed')
-    util.redistribute(data['SD']['data'], '2021-08-04', 374*6//7, 6, 'confirmed')
-    util.redistribute(data['SD']['data'], '2021-08-04', 7*6//7, 6, 'death')
-    data['SD']['data'].loc['2021-08-05':, 'confirmed'] = onp.nan
-    data['SD']['data'].loc['2021-08-05':, 'death'] = onp.nan
+    # Take care of states that only report once / week. 
+    #
+    # Assume reporting happens once/week starting on the specific date. For each
+    # reporting date, take the total number reported over the preceding week and 
+    # spread evenly across the days
+    #
+    util.smooth_to_weekly(data, forecast_date, 'IA', 'confirmed', '2021-07-21')
+    util.smooth_to_weekly(data, forecast_date, 'IA', 'death',     '2021-07-21')
+    
+    util.smooth_to_weekly(data, forecast_date, 'SD', 'confirmed', '2021-07-14')
+    util.smooth_to_weekly(data, forecast_date, 'SD', 'death',     '2021-07-14')
 
-    # Ohio death is now delayed and attributed to time of death
-    # by JHU. The last week (or more) is basically empty. Guesstimate
-    # how far back and set to missing.
-    data['OH']['data'].loc['2021-07-25':, 'death'] = onp.nan
+    util.smooth_to_weekly(data, forecast_date, 'FL', 'confirmed', '2021-06-11')
+    util.smooth_to_weekly(data, forecast_date, 'FL', 'death',     '2021-06-11')
 
+    # OK reports cases daily, but deaths once/week
+    util.smooth_to_weekly(data, forecast_date, 'OK', 'death',     '2021-03-24')
+
+    # OH death data is delayed, so recent weeks always appear as zeros. 
+    # Set trailing two weeks to missing
+    data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
+
+    
+    '''Adjustments for one-off irregularities'''
+    
     # JHU
     util.redistribute(data['TX']['data'], '2021-08-06', 7634, 60, 'confirmed')
 
