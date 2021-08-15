@@ -95,6 +95,7 @@ def make_manual_adjustments(data, forecast_date):
 
     util.redistribute(data['IA']['data'], '2021-07-07', 950, -1, 'confirmed')
 
+    util.redistribute(data['AL']['data'], '2021-07-31', 8144 * 2 // 3, 2, 'confirmed')
 
     # JHU
     util.redistribute(data['TX']['data'], '2021-08-06', 7634, 60, 'confirmed')
