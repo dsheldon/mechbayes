@@ -93,6 +93,8 @@ def clean(data, forecast_date):
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
 
+    util.redistribute(data['NY']['data'], '2021-08-15', 235 - 45, 30, 'death')
+
     util.redistribute(data['IA']['data'], '2021-07-07', 950, -1, 'confirmed')
 
     util.redistribute(data['AL']['data'], '2021-07-31', 8144 * 2 // 3, 2, 'confirmed')
