@@ -13,7 +13,7 @@ Example: US/renewal/2021-08-01
   * `US`: for submissions to the US forecast hub, includes US and its states and territories
   * `EU`: for EU forecast hub, includes European countries 
 
-* `model_config_name` (e.g., `renewal`) is a named model configuration, also defined 
+* `model_configs` (e.g., `renewal`) is a named model configuration, also defined 
   in [config.json](config.json). A forecast group can have multiple model configurations for
    comparison.
 
@@ -63,13 +63,13 @@ The main script for launching and collecting forecasts is `launch.py`. The basic
 2. Launch forecasts
 
     ~~~ bash
-    python launch.py --forecast_group US --num_sundays 1
+    python3 launch.py --forecast_group US --num_sundays 1
     ~~~
 
 3. Collect forecasts (creates web vis, submission files, pushes to web server)
 
     ~~~ bash
-    python launch.py --forecast_group US --num_sundays 1 --mode collect
+    python3 launch.py --forecast_group US --num_sundays 1 --mode collect
     ~~~
 
 4. Check results on web
@@ -85,13 +85,13 @@ The main script for launching and collecting forecasts is `launch.py`. The basic
 
     c. Selectively re-run forecasts
     ~~~ bash
-    python launch.py --forecast_group US --num_sundays 1 --model_config_name renewal --places MA NY
+    python3 launch.py --forecast_group US --num_sundays 1 --model_configs renewal --places MA NY
     ~~~
 
     d. Or replace samples with ones from a different model, then rerun with the `--no-run` option to re-create the forecast plots.
     ~~~ bash
     cp US/frozen_21/2021-08-01/samples/{MA,NY}.npz US/renewal/2021-08-01/samples/
-    python launch.py --forecast_group US --num_sundays 1 --model_config_name renewal --places MA NY --no-run    
+    python3 launch.py --forecast_group US --num_sundays 1 --model_configs renewal --places MA NY --no-run    
     ~~~
     
     e. Monitor jobs
@@ -102,7 +102,7 @@ The main script for launching and collecting forecasts is `launch.py`. The basic
     
     f. After all jobs are complete, re-collect output (to update submission file and vis)
     ~~~ bash
-    python launch.py --forecast_group US --num_sundays 1 --model_config_name renewal --mode collect    
+    python3 launch.py --forecast_group US --num_sundays 1 --model_configs renewal --mode collect    
     ~~~
 
     You can supply multiple model configuration names in the commands above to re-run multiple models,
@@ -116,7 +116,7 @@ You will typically want to run this command once per week after new
 truth data is available:
 
 ~~~ bash
-python score.py --forecast_group US --num_sundays 5
+python3 score.py --forecast_group US --num_sundays 5
 ~~~
 
 This scores the last 5 weekly forecasts at all available horizons. 
@@ -128,7 +128,7 @@ To create summary evaluations over longer time periods without rescoring
 individual forecasts (which is slow), do this:
 
 ~~~ bash
-python score.py --forecast_group US --num_sundays 10 --no-scores
+python3 score.py --forecast_group US --num_sundays 10 --no-scores
 ~~~
 
 
