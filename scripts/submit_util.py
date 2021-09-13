@@ -51,6 +51,7 @@ def create_submission_file(prefix, forecast_date, model, data, places, submit_ar
         fname = f"{prefix}/{forecast_date_str}-{team_name}-{model_name}.csv"
 
     forecast_df.to_csv(fname, float_format="%.0f", index=False)
+    Path(fname).chmod(0o664)
 
 def get_location_codes():
 

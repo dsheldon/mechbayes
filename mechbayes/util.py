@@ -340,7 +340,7 @@ def run_place(data,
 
         # Save samples
         path = Path(prefix) / 'samples'
-        path.mkdir(parents=True, exist_ok=True)
+        path.mkdir(mode=0o775, parents=True, exist_ok=True)
         filename = path / f'{place}.npz'
         
         save_samples(filename,
@@ -351,7 +351,7 @@ def run_place(data,
                      save_fields=save_fields)
         
         path = Path(prefix) / 'summary'
-        path.mkdir(parents=True, exist_ok=True)
+        path.mkdir(mode=0o775, parents=True, exist_ok=True)
         filename = path / f'{place}.txt'
         
         write_summary(filename, model.mcmc)
@@ -375,6 +375,7 @@ def save_samples(filename,
                          mcmc_samples = trim(mcmc_samples),
                          post_pred_samples = trim(post_pred_samples),
                          forecast_samples = trim(forecast_samples))
+    filename.chmod(0o664)
 
 
 def write_summary(filename, mcmc):
@@ -384,6 +385,7 @@ def write_summary(filename, mcmc):
         sys.stdout = f
         mcmc.print_summary()
     sys.stdout = orig_stdout
+    filename.chmod(0o664)
 
     
 def load_samples(filename):
@@ -467,6 +469,7 @@ def gen_forecasts(data,
     if save:
         filename = vis_path / f'{place}_R0.png'
         plt.savefig(filename)
+        filename.chmod(0o664)
 
     if show:
         plt.show()   
