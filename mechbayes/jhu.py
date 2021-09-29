@@ -1,6 +1,7 @@
 import pandas as pd
 import cachetools.func
 import warnings
+import covidcast
 
 from . import states
 
@@ -24,6 +25,17 @@ def load_countries():
 
     # Load each data file into a dataframe with row index = date, and column index = (country, province)
     d = {key: load_and_massage(url) for key, url in sources.items()}
+
+    # constuct country-level hosp df
+    country_info = get_country_info()
+    us_hosp = load_us_covidcast("hospitalizations","nation")
+    hosp_df = pd.DataFrame(columns=country_info['Country_Region'], index=us_hosp.index)
+    hosp_df = hosp_df.drop(columns=['US'])
+    # df with date as index, US column with hosp value, other columns with nan
+    hosp_df = hosp_df.merge(us_hosp, how = "right", left_index=True, right_index=True)
+    
+    # add hospitalization data to dictionary
+    d['hospitalization'] = hosp_df
 
     # Concatenate data frames: column index is now (variable, country)
     df = pd.concat(d.values(), axis=1, keys=d.keys())
@@ -98,8 +110,57 @@ def load_us_states():
 def load_us_counties():
     return load_us(counties=True)
 
+def load_us_covidcast(measure, spatial_resolution = "state", as_of = None):
+    data_source = None
+    signal = None
+    if measure == "cases":
+        signal = "confirmed_incidence_num"
+        data_source = "jhu-csse"
+    elif measure == "deaths":
+        signal = "deaths_incidence_num"
+        data_source = "jhu-csse"
+    elif measure == "hospitalizations":
+        data_source = "hhs"
+        signal = "confirmed_admissions_covid_1d"
+        
+    df = covidcast.signal(data_source = data_source, 
+                        signal = signal, 
+                        geo_type = spatial_resolution,
+                        as_of = as_of)
+        
+    meta_cols = ['lag',
+                 'missing_value',
+                 'missing_stderr',
+                 'missing_sample_size',
+                 'stderr',
+                 'sample_size',
+                 'geo_type',
+                 'data_source',
+                 'signal', 
+                 'issue']
+
+    meta_cols = [c for c in meta_cols if c in df.columns]
+    # only keep time_value, geo_value and value
+    df["geo_value"] = df["geo_value"].str.upper()
+
+    if spatial_resolution == "county":
+        county_info = get_county_info()
+        df = df.merge(county_info[['FIPS','state','Admin2']], left_on="geo_value", right_on="FIPS", how = "left")
+        # rename geo_value
+        df['geo_value'] = df['state'] + '-' + df['Admin2']
+        # filter PR, other territories
+        df = df.loc[-pd.isna(df['geo_value'])]
+        df = df.drop(columns=['FIPS','state','Admin2'])
+    
+    df = df.drop(columns=meta_cols)
+    df = df.pivot(index='time_value', columns='geo_value', values='value')
+    df = df.rename_axis(None)
+    df.index = pd.to_datetime(df.index)
+    
+    return df
+
 @cachetools.func.ttl_cache(ttl=600)
-def load_us(counties=False):
+def load_us(source = "jhu", counties=False):
     
     baseURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/"
 
@@ -140,13 +201,27 @@ def load_us(counties=False):
         df.index = pd.to_datetime(df.index)
         
         return df
+    
+    if source == "jhu":
+        confirmed = load_us_time_series("time_series_covid19_confirmed_US.csv")
+        deaths = load_us_time_series("time_series_covid19_deaths_US.csv")
+        
+        # Combine deaths and confirmed
+        df = pd.concat([deaths,confirmed],axis=1,keys=('death','confirmed'))
+        df = df.reorder_levels([1,0], axis=1).sort_index(axis=1)
+    elif source == "covidcast":
+        if counties:
+            confirmed = load_us_covidcast("cases", "county")
+            deaths = load_us_covidcast("cases", "county")
+            # Combine deaths and confirmed
+            df = pd.concat([deaths,confirmed],axis=1,keys=('death','confirmed'))
+            df = df.reorder_levels([1,0], axis=1).sort_index(axis=1)
+        else:
+            confirmed = load_us_covidcast("cases", "state")
+            deaths = load_us_covidcast("cases", "state")
+            hosps =  load_us_covidcast("hospitalizations", "state")
+            # Combine deaths and confirmed
+            df = pd.concat([deaths,hosps,confirmed],axis=1,keys=('death','hospitalization','confirmed'))
+            df = df.reorder_levels([1,0], axis=1).sort_index(axis=1)
 
-    
-    confirmed = load_us_time_series("time_series_covid19_confirmed_US.csv")
-    deaths = load_us_time_series("time_series_covid19_deaths_US.csv")
-    
-    # Combine deaths and confirmed
-    df = pd.concat([deaths,confirmed],axis=1,keys=('death','confirmed'))
-    df = df.reorder_levels([1,0], axis=1).sort_index(axis=1)
-    
     return(df)
