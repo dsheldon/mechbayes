@@ -1,10 +1,23 @@
 {
-    "output_dir" : "/mnt/nfs/work1/sheldon/sheldon/mechbayes",
+    "output_dir" : "/mnt/nfs/work1/eray/wang225y/mechbayes",
 
     "model_configs" : {
 
         "renewal": {
 	    "comment": "vanilla renewal model to match operational MB",
+            "model": "mechbayes.models.SEIRD_renewal.SEIRD",
+            "args"  : {
+                "gamma_shape":  1000,
+                "sigma_shape":  1000,
+                "resample_high": 80,
+                "rw_use_last": 10,
+                "rw_scale": 1e-1,
+                "H_duration_est": 25.0
+            }
+        },
+
+        "test_hosp_renewal": {
+            "comment": "vanilla renewal model to match operational MB",
             "model": "mechbayes.models.SEIRD_renewal.SEIRD",
             "args"  : {
                 "gamma_shape":  1000,
@@ -190,6 +203,35 @@
                 "num_weeks" : 4,
                 "targets" : ["inc death", "cum death"]
 	    }
+        },
+
+        "test_hosp_US": {
+            "comment" : ["For US forecast hub submissions",
+                 " -- submit renewal model",
+                 " -- use renewal_14 as backup",
+                 " -- use llonger_H_fix, frozen_21, frozen_28 as extra backups,",
+                 "    but retire them after 2021-08-15 forecasts"],
+                "region": "US_and_states_sorted",
+                "start" : "2020-03-04",
+                "model_configs" : ["test_hosp_renewal"],
+                "submission" : true,
+                "submission_args": {
+                    "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
+                                  0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
+                    "num_weeks" : 4,
+                    "targets" : ["inc death", "cum death"],
+                    "team_name" : "UMass",
+                    "model_name" : "MechBayes"
+                },
+            "publish": true,
+            "publish_args": {
+            "host" : "doppler",
+            "dest":  "/var/www/html/covid"
+            },
+            "score_args": {
+                    "num_weeks" : 4,
+                    "targets" : ["inc death", "cum death"]
+            }
         },
 
         "EU": {
