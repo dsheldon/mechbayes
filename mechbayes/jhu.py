@@ -160,7 +160,7 @@ def load_us_covidcast(measure, spatial_resolution = "state", as_of = None):
     return df
 
 @cachetools.func.ttl_cache(ttl=600)
-def load_us(source = "jhu", counties=False):
+def load_us(source = "covidcast", counties=False):
     
     baseURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/"
 
