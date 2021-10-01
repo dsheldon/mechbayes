@@ -114,10 +114,10 @@ def load_us_covidcast(measure, spatial_resolution = "state", as_of = None):
     data_source = None
     signal = None
     if measure == "cases":
-        signal = "confirmed_incidence_num"
+        signal = "confirmed_cumulative_num"
         data_source = "jhu-csse"
     elif measure == "deaths":
-        signal = "deaths_incidence_num"
+        signal = "deaths_cumulative_num"
         data_source = "jhu-csse"
     elif measure == "hospitalizations":
         data_source = "hhs"
@@ -153,6 +153,13 @@ def load_us_covidcast(measure, spatial_resolution = "state", as_of = None):
         df = df.drop(columns=['FIPS','state','Admin2'])
     
     df = df.drop(columns=meta_cols)
+    
+    # aggregate to cumulative sum 
+    df['value'] = df['value'].fillna(0)
+    df['cumsum'] = df.groupby(['geo_value'])['value'].cumsum()
+    df = df.drop('value', axis=1)
+    df = df.rename(columns={'cumsum': 'value'})
+
     df = df.pivot(index='time_value', columns='geo_value', values='value')
     df = df.rename_axis(None)
     df.index = pd.to_datetime(df.index)
@@ -205,23 +212,21 @@ def load_us(source = "covidcast", counties=False):
     if source == "jhu":
         confirmed = load_us_time_series("time_series_covid19_confirmed_US.csv")
         deaths = load_us_time_series("time_series_covid19_deaths_US.csv")
-        
-        # Combine deaths and confirmed
-        df = pd.concat([deaths,confirmed],axis=1,keys=('death','confirmed'))
-        df = df.reorder_levels([1,0], axis=1).sort_index(axis=1)
+        # A dataframe with nan
+        hosps = pd.DataFrame(columns=deaths.columns, index=deaths.index)
     elif source == "covidcast":
         if counties:
             confirmed = load_us_covidcast("cases", "county")
             deaths = load_us_covidcast("cases", "county")
-            # Combine deaths and confirmed
-            df = pd.concat([deaths,confirmed],axis=1,keys=('death','confirmed'))
-            df = df.reorder_levels([1,0], axis=1).sort_index(axis=1)
+            # A dataframe with nan
+            hosps = pd.DataFrame(columns=deaths.columns, index=deaths.index)
         else:
             confirmed = load_us_covidcast("cases", "state")
             deaths = load_us_covidcast("cases", "state")
             hosps =  load_us_covidcast("hospitalizations", "state")
-            # Combine deaths and confirmed
-            df = pd.concat([deaths,hosps,confirmed],axis=1,keys=('death','hospitalization','confirmed'))
-            df = df.reorder_levels([1,0], axis=1).sort_index(axis=1)
+        
+    # Combine deaths, hospitalizations, and confirmed
+    df = pd.concat([deaths,hosps,confirmed],axis=1,keys=('death','hospitalization','confirmed'))
+    df = df.reorder_levels([1,0], axis=1).sort_index(axis=1)
 
     return(df)

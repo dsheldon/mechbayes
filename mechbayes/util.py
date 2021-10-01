@@ -90,9 +90,8 @@ def load_county_data():
 def load_data():
     state_data = load_state_data()
     country_data = load_country_data()
-    #county_data = load_county_data()
-    #return dict(country_data, **state_data, **county_data)
-    return dict(country_data, **state_data)
+    county_data = load_county_data()
+    return dict(country_data, **state_data, **county_data)
 
 
 def redistribute(df, date, n, k, col='death'):
