@@ -1,5 +1,5 @@
 {
-    "output_dir" : "/covid/mechbayes/results",
+    "output_dir" : "/mnt/nfs/work1/eray/wang225y/mechbayes",
 
     "model_configs" : {
 
