@@ -34,8 +34,8 @@ class Model():
         'I': 'infectious',
         'R': 'removed',
         'E': 'exposed',
-        'H': 'hospitalized',
-        'D': 'dead',
+        'D1': 'dead 1',
+        'D2': 'dead',
         'C': 'cumulative infected',
         'y': 'confirmed',
         'z': 'deaths',
@@ -313,7 +313,7 @@ class Model():
     
 class SEIRDBase(Model):
 
-    compartments = ['S', 'E', 'I', 'R', 'H', 'D', 'C']
+    compartments = ['S', 'E', 'I', 'R', 'D1', 'D2', 'C']
 
     @property
     def obs(self):

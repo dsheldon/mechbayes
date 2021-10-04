@@ -149,19 +149,19 @@ class SEIRDModel(SEIRModel):
         """
         SEIRD equations
         """
-        S, E, I, R, H, D, C = x
-        N = S + E + I + R + H + D
+        S, E, I, R, D1, D2, C = x
+        N = S + E + I + R + D1 + D2
 
         dS_dt = - beta * S * I / N
         dE_dt = beta * S * I / N - sigma * E
         dI_dt = sigma * E - gamma * (1 - death_prob) * I - gamma * death_prob * I
-        dH_dt = death_prob * gamma * I - death_rate * H
-        dD_dt = death_rate * H
+        dD1_dt = death_prob * gamma * I - death_rate * D1
+        dD2_dt = death_rate * D1
         dR_dt = gamma * (1 - death_prob) * I
         dC_dt = sigma * E  # cumulative infections
 
-        return np.stack([dS_dt, dE_dt, dI_dt, dR_dt, dH_dt, dD_dt, dC_dt])
+        return np.stack([dS_dt, dE_dt, dI_dt, dR_dt, dD1_dt, dD2_dt, dC_dt])
 
     @classmethod
-    def seed(cls, N=1e6, I=100., E=0., R=0.0, H=0.0, D=0.0):
-        return np.stack([N-E-I-R-H-D, E, I, R, H, D, I])
+    def seed(cls, N=1e6, I=100., E=0., R=0.0, D1=0.0, D2=0.0):
+        return np.stack([N-E-I-R-D1-D2, E, I, R, D1, D2, I])

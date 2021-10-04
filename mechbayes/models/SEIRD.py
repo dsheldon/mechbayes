@@ -26,7 +26,7 @@ class SEIRD(SEIRDBase):
                  T_future = 0,
                  E_duration_est = 4.0,
                  I_duration_est = 2.0,
-                 H_duration_est = 10.0,
+                 D1_duration_est = 10.0,
                  R0_est = 3.0,
                  beta_shape = 1.,
                  sigma_shape = 100.,
@@ -52,8 +52,8 @@ class SEIRD(SEIRDBase):
         # Sample initial number of infected individuals
         I0 = numpyro.sample("I0", dist.Uniform(0, 1e-4*N))  # change to 1e-3 if starting on 2020-03-16
         E0 = numpyro.sample("E0", dist.Uniform(0, 1e-4*N))  # change to 1e-3 if starting on 2020-03-16
-        H0 = numpyro.sample("H0", dist.Uniform(0, 1e-4*N))
-        D0 = numpyro.sample("D0", dist.Uniform(0, 1e-4*N))
+        D1_0 = numpyro.sample("D1_0", dist.Uniform(0, 1e-4*N))
+        D2_0 = numpyro.sample("D2_0", dist.Uniform(0, 1e-4*N))
 
 
         # Sample dispersion parameters around specified values
@@ -95,10 +95,10 @@ class SEIRD(SEIRDBase):
                                     dist.Beta(death_prob_est * death_prob_conc, (1-death_prob_est) * death_prob_conc))
                                     
         death_rate = numpyro.sample("death_rate", 
-                                    dist.Gamma(death_rate_shape, death_rate_shape * H_duration_est))
+                                    dist.Gamma(death_rate_shape, death_rate_shape * D1_duration_est))
 
 
-        x0 = SEIRDModel.seed(N=N, I=I0, E=E0, H=H0, D=D0)
+        x0 = SEIRDModel.seed(N=N, I=I0, E=E0, D1=D1_0, D2=D2_0)
         numpyro.deterministic("x0", x0)
 
         # Split observations into first and rest

@@ -142,7 +142,7 @@ class SEIRD(SEIRDBase):
                  T_future = 0,
                  E_duration_est = 4.0,
                  I_duration_est = 2.0,
-                 H_duration_est = 10.0,
+                 D1_duration_est = 10.0,
                  R0_est = 3.0,
                  beta_shape = 1.,
                  sigma_shape = 100.,
@@ -209,7 +209,7 @@ class SEIRD(SEIRDBase):
                                     dist.Beta(death_prob_est * death_prob_conc, (1-death_prob_est) * death_prob_conc))
                                     
         death_rate = numpyro.sample("death_rate", 
-                                    dist.Gamma(death_rate_shape, death_rate_shape * H_duration_est))
+                                    dist.Gamma(death_rate_shape, death_rate_shape * D1_duration_est))
 
 
         # Split observations into first and rest
@@ -241,7 +241,8 @@ class SEIRD(SEIRDBase):
         # First observation
         dy0 = observe_nb2("dy0", I0, det_prob0, confirmed_dispersion, obs=confirmed0)
         dz0 = observe_nb2("dz0", D0, det_prob_d, death_dispersion, obs=death0)
-               
+        
+        #dD1?
         beta, det_prob, dE, dI, dD, dy, dz = self.dynamics(T-1, 
                                                            params, 
                                                            dE_init,
