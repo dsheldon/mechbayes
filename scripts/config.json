@@ -213,7 +213,7 @@
             "publish": true,
             "publish_args": {
             "host" : "doppler",
-            "dest":  "/var/www/html/covid"
+            "dest":  "/var/www/html/covid/serena"
             },
             "score_args": {
                     "num_weeks" : 4,
