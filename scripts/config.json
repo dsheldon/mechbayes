@@ -16,19 +16,6 @@
             }
         },
 
-        "test_hosp_renewal": {
-            "comment": "vanilla renewal model to match operational MB",
-            "model": "mechbayes.models.SEIRD_renewal.SEIRD",
-            "args"  : {
-                "gamma_shape":  1000,
-                "sigma_shape":  1000,
-                "resample_high": 80,
-                "rw_use_last": 10,
-                "rw_scale": 1e-1,
-                "H_duration_est": 25.0
-            }
-        },
-
         "renewal_14": {
 	    "comment": "renewal model with contact rate frozen for last 14 days",
             "model": "mechbayes.models.SEIRD_renewal.SEIRD",
@@ -211,7 +198,7 @@
                  "    but retire them after 2021-08-15 forecasts"],
                 "region": "US_and_states_sorted",
                 "start" : "2020-03-04",
-                "model_configs" : ["test_hosp_renewal"],
+                "model_configs" : ["renewal", "renewal_14"],
                 "submission" : true,
                 "submission_args": {
                     "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
