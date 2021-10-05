@@ -419,7 +419,8 @@ def gen_forecasts(data,
     model = model_type()
 
     confirmed = data[place]['data'].confirmed[start:end]
-    death = data[place]['data'].death[start:end]
+    #death = data[place]['data'].death[start:end]
+    death = data[place]['data'].hospitalization[start:end]
 
     T = len(confirmed)
     N = data[place]['pop']

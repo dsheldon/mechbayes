@@ -154,11 +154,12 @@ def load_us_covidcast(measure, spatial_resolution = "state", as_of = None):
     
     df = df.drop(columns=meta_cols)
     
-    # aggregate to cumulative sum 
-    df['value'] = df['value'].fillna(0)
-    df['cumsum'] = df.groupby(['geo_value'])['value'].cumsum()
-    df = df.drop('value', axis=1)
-    df = df.rename(columns={'cumsum': 'value'})
+    if measure == "hospitalizations":
+        # aggregate to cumulative sum 
+        df['value'] = df['value'].fillna(0)
+        df['cumsum'] = df.groupby(['geo_value'])['value'].cumsum()
+        df = df.drop('value', axis=1)
+        df = df.rename(columns={'cumsum': 'value'})
 
     df = df.pivot(index='time_value', columns='geo_value', values='value')
     df = df.rename_axis(None)
@@ -167,7 +168,7 @@ def load_us_covidcast(measure, spatial_resolution = "state", as_of = None):
     return df
 
 @cachetools.func.ttl_cache(ttl=600)
-def load_us(source = "covidcast", counties=False):
+def load_us(source = "jhu", counties=False):
     
     baseURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/"
 
@@ -212,8 +213,11 @@ def load_us(source = "covidcast", counties=False):
     if source == "jhu":
         confirmed = load_us_time_series("time_series_covid19_confirmed_US.csv")
         deaths = load_us_time_series("time_series_covid19_deaths_US.csv")
-        # A dataframe with nan
-        hosps = pd.DataFrame(columns=deaths.columns, index=deaths.index)
+        if counties:
+            # A dataframe with nan
+            hosps = pd.DataFrame(columns=deaths.columns, index=deaths.index)
+        else:
+            hosps = load_us_covidcast("hospitalizations", "state")
     elif source == "covidcast":
         if counties:
             confirmed = load_us_covidcast("cases", "county")
@@ -223,7 +227,7 @@ def load_us(source = "covidcast", counties=False):
         else:
             confirmed = load_us_covidcast("cases", "state")
             deaths = load_us_covidcast("cases", "state")
-            hosps =  load_us_covidcast("hospitalizations", "state")
+            hosps = load_us_covidcast("hospitalizations", "state")
         
     # Combine deaths, hospitalizations, and confirmed
     df = pd.concat([deaths,hosps,confirmed],axis=1,keys=('death','hospitalization','confirmed'))
