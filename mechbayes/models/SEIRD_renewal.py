@@ -223,7 +223,8 @@ class SEIRD(SEIRDBase):
             death0, death = (None, None)
         else: 
             death0 = death[0]
-            death = clean_daily_obs(onp.diff(death))
+            #death = clean_daily_obs(onp.diff(death))
+            death = clean_daily_obs(death[:-1])
         
         params = (beta0, 
                   sigma, 

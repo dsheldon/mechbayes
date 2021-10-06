@@ -143,6 +143,9 @@ def load_us_covidcast(measure, spatial_resolution = "state", as_of = None):
     # only keep time_value, geo_value and value
     df["geo_value"] = df["geo_value"].str.upper()
 
+    # make value an integer column
+    df["value"] = pd.to_numeric(df["value"], errors='coerce')
+
     if spatial_resolution == "county":
         county_info = get_county_info()
         df = df.merge(county_info[['FIPS','state','Admin2']], left_on="geo_value", right_on="FIPS", how = "left")
@@ -154,13 +157,15 @@ def load_us_covidcast(measure, spatial_resolution = "state", as_of = None):
     
     df = df.drop(columns=meta_cols)
     
+    """
     if measure == "hospitalizations":
         # aggregate to cumulative sum 
         df['value'] = df['value'].fillna(0)
         df['cumsum'] = df.groupby(['geo_value'])['value'].cumsum()
         df = df.drop('value', axis=1)
         df = df.rename(columns={'cumsum': 'value'})
-
+    """
+    
     df = df.pivot(index='time_value', columns='geo_value', values='value')
     df = df.rename_axis(None)
     df.index = pd.to_datetime(df.index)

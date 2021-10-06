@@ -112,8 +112,8 @@ class SEIRD(SEIRDBase):
             death0, death = (None, None)
         else: 
             death0 = death[0]
-            death = clean_daily_obs(onp.diff(death))
-        
+            #death = clean_daily_obs(onp.diff(death))
+            death = clean_daily_obs(death[:-1])
         # First observation
         with numpyro.handlers.scale(scale=0.5):
             y0 = observe_nb2("dy0", x0[6], det_prob0, confirmed_dispersion, obs=confirmed0)
