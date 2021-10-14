@@ -114,10 +114,10 @@ def load_us_covidcast(measure, spatial_resolution = "state", as_of = None):
     data_source = None
     signal = None
     if measure == "cases":
-        signal = "confirmed_cumulative_num"
+        signal = "confirmed_incidence_num"
         data_source = "jhu-csse"
     elif measure == "deaths":
-        signal = "deaths_cumulative_num"
+        signal = "deaths_incidence_num"
         data_source = "jhu-csse"
     elif measure == "hospitalizations":
         data_source = "hhs"
@@ -211,7 +211,10 @@ def load_us(source = "jhu", counties=False):
             df = df.drop(columns=meta_cols).groupby('state').sum()
 
         df = df.T
+        df = df.diff()
+        #df = df[1:]
         df.index = pd.to_datetime(df.index)
+
         
         return df
     

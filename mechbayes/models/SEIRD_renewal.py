@@ -217,14 +217,16 @@ class SEIRD(SEIRDBase):
             confirmed0, confirmed = (None, None)
         else:
             confirmed0 = confirmed[0]  # this is cumulative number of cases by start date
-            confirmed = clean_daily_obs(onp.diff(confirmed))
-            
+            #confirmed = clean_daily_obs(onp.diff(confirmed))
+            confirmed = clean_daily_obs(confirmed[1:])
+
         if death is None:
             death0, death = (None, None)
         else: 
             death0 = death[0]
             #death = clean_daily_obs(onp.diff(death))
-            death = clean_daily_obs(death[:-1])
+            death = clean_daily_obs(death[1:])
+            #death = clean_daily_obs(death)
         
         params = (beta0, 
                   sigma, 

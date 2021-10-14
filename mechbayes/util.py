@@ -436,10 +436,10 @@ def gen_forecasts(data,
 
                 if daily:
                     variables = ['dy', 'dz']
-                    observations = [confirmed.diff(), death]
+                    observations = [confirmed, death]
                 else:
                     variables = ['y', 'z']
-                    observations= [confirmed, death.cumsum()]
+                    observations= [confirmed.cumsum(), death.cumsum()]
 
                 for variable, obs, ax in zip(variables, observations, axes):
                     model.plot_forecast(variable,

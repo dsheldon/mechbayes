@@ -40,7 +40,8 @@ class Model():
         'y': 'confirmed',
         'z': 'deaths',
         'dy': 'daily confirmed',
-        'dz': 'daily deaths',
+        #'dz': 'daily deaths',
+        'dz': 'daily hospitalizaions',
         'mean_dy': 'daily confirmed (mean)',
         'mean_dz': 'daily deaths (mean)'
     }
