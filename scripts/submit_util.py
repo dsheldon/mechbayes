@@ -50,7 +50,11 @@ def create_submission_file(prefix, forecast_date, model, data, places, submit_ar
     else:
         fname = f"{prefix}/{forecast_date_str}-{team_name}-{model_name}.csv"
 
+    file_exists = Path(fname).exists()
     forecast_df.to_csv(fname, float_format="%.0f", index=False)
+    if not file_exists:
+        Path(fname).chmod(0o664)
+
 
 def get_location_codes():
 

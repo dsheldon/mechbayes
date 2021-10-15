@@ -340,7 +340,7 @@ def run_place(data,
 
         # Save samples
         path = Path(prefix) / 'samples'
-        path.mkdir(parents=True, exist_ok=True)
+        path.mkdir(mode=0o775, parents=True, exist_ok=True)
         filename = path / f'{place}.npz'
         
         save_samples(filename,
@@ -351,7 +351,7 @@ def run_place(data,
                      save_fields=save_fields)
         
         path = Path(prefix) / 'summary'
-        path.mkdir(parents=True, exist_ok=True)
+        path.mkdir(mode=0o775, parents=True, exist_ok=True)
         filename = path / f'{place}.txt'
         
         write_summary(filename, model.mcmc)
@@ -369,21 +369,27 @@ def save_samples(filename,
         if d is not None:
             d = {k : v for k, v in d.items() if k in save_fields}
         return d
-        
+    
+    file_exists = filename.exists()
     onp.savez_compressed(filename, 
                          prior_samples = trim(prior_samples),
                          mcmc_samples = trim(mcmc_samples),
                          post_pred_samples = trim(post_pred_samples),
                          forecast_samples = trim(forecast_samples))
+    if not file_exists:
+        filename.chmod(0o664)
 
 
 def write_summary(filename, mcmc):
     # Write diagnostics to file
+    file_exists = filename.exists()
     orig_stdout = sys.stdout
     with open(filename, 'w') as f:
         sys.stdout = f
         mcmc.print_summary()
     sys.stdout = orig_stdout
+    if not file_exists:
+        filename.chmod(0o664)
 
     
 def load_samples(filename):
@@ -466,7 +472,10 @@ def gen_forecasts(data,
     
     if save:
         filename = vis_path / f'{place}_R0.png'
+        file_exists = filename.exists()
         plt.savefig(filename)
+        if not file_exists:
+            filename.chmod(0o664)
 
     if show:
         plt.show()   
