@@ -42,18 +42,42 @@ to save space/time).
 
 # Running weekly forecasts
 
-## Before: Data Cleaning
+The forecasts are automatically generated and the visualizations updated on Sunday morning and Monday morning. They will be finished running by 7am. The Sunday run is a preliminary run that we use to check for outliers that may affect the forecasts. The Monday run is what we actually submit.
 
-Most of the weekly data cleaning work is now automated, but it will probably
-remain useful to look for and address serious data issues prior to running forecasts.
+## Sunday: Data Cleaning
 
-* Check visualization of previous week's forecasts compared to truth data to
-  look for obvious outliers in truth data
-* Also review JHU weekly report of data problems
+Most of the weekly data cleaning work is now automated, but it is still
+useful to look for and address serious data issues on Sunday so that they are fixed in the Monday runs.
+
+* Check the visualization of a preliminary run of this week's forecasts compared to truth data to
+  look for obvious outliers in truth data that are affecting the forecasts of incident deaths.
+    * You can view the forecasts at http://doppler.cs.umass.edu/covid/weekly_submission/
+    * As described above, there are subfolders for the US and the EU, then the model (we typically submit `renewal` in the US and `renewal_21` in the EU), then the forecast date. From there, look at the `vis` folder and select "daily" for the target.
+    * Scan through the locations and look for situations where there is an outlier **and** the forecast of deaths is visibly affected. We'll want to fix these. If the forecast of deaths is not affected, there's no need to make an adjustment to the data.
+* It's also helpful to review JHU weekly report of data problems
 * Keep a checklist of possible issues
 * Use [Data Cleaning.ipynb](Data%20Cleaning.ipynb) on your machine to inspect issues and make fixes if needed
-* Put fixes in [data_cleaning.py](data_cleaning.py). Make sure changes are propagated to
-  where you will run the model.
+    * In the second code cell, set the `place` and `var` to the location and variable with a problem. Also update the `start` date to a little before the time of the outlier, and the `forecast_date` to the date of the model run.
+    * After running the first couple of code cells, you should see enough output to figure out when the problem was.
+    * Put fixes in [data_cleaning.py](data_cleaning.py). You'll be adding a line similar to `util.redistribute(data['AR']['data'], '2021-10-10', 167 - 17, 12*30, 'death')` to the `make_manual_adjustments` function, where:
+        * You need to update `AR` with the name of the location you're correcting
+        * The second argument is the date being corrected
+        * The third argument is the size of the correction. In the example above, the initial reported value was 167, and we wanted 17 deaths to be reported for that date after the adjustment was made, so the size of the correction to make is `167 - 17 = 150`.
+        * The fourth argument is the number of days back over which the adjustment should be distributed. In this case, we're distributing the 150 extra reported deaths over the past `12 * 30 = 360` days. To move the exess forward in time, you could provide a negative offset.
+        * The last argument is the variable for which the adjustment should be made.
+    * Commit your changes to `data_cleaning.py` to the main branch and push them to the mechbayes repo.
+    * Make sure changes are propagated to where you will run the model (i.e., do a `git pull origin main` in the mechbayes repo clone on the cluster that will be used for running the models). If you're making the changes on a Sunday, this will happen automatically before the Monday morning run, so you don't need to take any action. If you're making changes on a Monday you'll have to do this manually.
+
+## Monday: Final check and submission
+
+ * On Monday, repeat the steps above to check over the forecasts.
+    * Hopefully you will have found any data reporting problems in your check on Sunday, so you'll be able to just submit the forecasts at this point
+    * If there are problems with the forecasts, you'll have to intervene in one of two ways:
+        1. Fix outliers. Go through the steps above to make adjustments for any outliers. Then, re-run forecasts for any locations that had problems using steps 5c, 5e, and 5f below.
+        2. Selectively replace one model's forecasts with another's. Sometimes, one model will fail for a given location and another will succeed. In that case, you can just replace the failed model's forecasts with the forecasts from the model that succeeded, using steps 5d, 5e, and 5f below.
+ * Download the submission files from the appropriate model folder on Doppler
+    * By default, we use `renewal` the US and `renewal_21` for the EU. The submission files can be downloaded from a folder like http://doppler.cs.umass.edu/covid/weekly_submission/US/renewal/2021-10-17/
+ * Submit by making pull requests to the `covid19-forecast-hub` and `covid19-forecast-hub-europe` repositories.
 
 ## Running Forecasts
 The main script for launching and collecting forecasts is `launch.py`. The basic steps are:
