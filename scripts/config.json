@@ -16,6 +16,20 @@
             }
         },
 
+        "renewal_hosp": {
+            "comment": "vanilla renewal model to match operational MB",
+                "model": "mechbayes.models.SEIRD_renewal.SEIRD",
+                "use_hosp_as_death": "True",
+                "args"  : {
+                    "gamma_shape":  1000,
+                    "sigma_shape":  1000,
+                    "resample_high": 80,
+                    "rw_use_last": 10,
+                    "rw_scale": 1e-1,
+                    "H_duration_est": 25.0
+                }
+            },
+
         "renewal_14": {
 	    "comment": "renewal model with contact rate frozen for last 14 days",
             "model": "mechbayes.models.SEIRD_renewal.SEIRD",
@@ -29,6 +43,21 @@
 		"num_frozen" : 14
             }
         },
+
+        "renewal_14_hosp": {
+            "comment": "renewal model with contact rate frozen for last 14 days",
+                "model": "mechbayes.models.SEIRD_renewal.SEIRD",
+                "use_hosp_as_death": "True",
+                "args"  : {
+                    "gamma_shape":  1000,
+                    "sigma_shape":  1000,
+                    "resample_high": 80,
+                    "rw_use_last": 10,
+                    "rw_scale": 1e-1,
+                    "H_duration_est": 25.0,
+            "num_frozen" : 14
+                }
+            },
 
         "renewal_21": {
 	    "comment": "renewal model with contact rate frozen for last 21 days",

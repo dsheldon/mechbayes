@@ -1,3 +1,4 @@
+from pickle import FALSE
 import sys
 import traceback
 import warnings
@@ -117,19 +118,19 @@ def redistribute(df, date, n, k, col='death'):
     
     if k > 0:
         new_incident = onp.concatenate([new_incident, [-n]])
-        new_cumulative = onp.cumsum(new_incident)    
+        #new_cumulative = onp.cumsum(new_incident)    
         end = date 
         start = date - pd.Timedelta('1d') * ndays
     else:
         new_incident = onp.concatenate([[-n], new_incident])
-        new_cumulative = onp.cumsum(new_incident)    
+        #new_cumulative = onp.cumsum(new_incident)    
         start = date
         end = date + pd.Timedelta('1d') * ndays
     
     days = pd.date_range(start=start, end=end)
     #days = pd.date_range(end=date-pd.Timedelta('1d'), periods=k-1)
     
-    df.loc[days, col] += new_cumulative
+    df.loc[days, col] += new_incident
 
 
 def set_trailing_weekend_zeros_to_missing(data,
@@ -283,6 +284,7 @@ Running
 
 def run_place(data, 
               place, 
+              use_hosp_as_death = False,
               model_type=mechbayes.models.SEIRD.SEIRD,
               start = '2020-03-04',
               end = None,
@@ -304,6 +306,11 @@ def run_place(data,
 
     print(f"Running {place} (start={start}, end={end})")
     place_data = data[place]['data'][start:end]
+    
+    # plug in hosp data as death data
+    if use_hosp_as_death:
+        place_data["death"] = place_data["hospitalization"]
+
     T = len(place_data)
 
     model = model_type(
@@ -402,6 +409,7 @@ def load_samples(filename):
 
 def gen_forecasts(data, 
                   place, 
+                  use_hosp_as_death = False,
                   model_type=mechbayes.models.SEIRD.SEIRD,
                   start = '2020-03-04', 
                   end=None,
@@ -419,8 +427,10 @@ def gen_forecasts(data,
     model = model_type()
 
     confirmed = data[place]['data'].confirmed[start:end]
-    #death = data[place]['data'].death[start:end]
-    death = data[place]['data'].hospitalization[start:end]
+    if use_hosp_as_death:
+        death = data[place]['data'].hospitalization[start:end]
+    else:
+        death = data[place]['data'].death[start:end]
 
     T = len(confirmed)
     N = data[place]['pop']

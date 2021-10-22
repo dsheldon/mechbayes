@@ -2,6 +2,7 @@ import pandas as pd
 import cachetools.func
 import warnings
 import covidcast
+import numpy as onp
 
 from . import states
 
@@ -154,20 +155,15 @@ def load_us_covidcast(measure, spatial_resolution = "state", as_of = None):
         # filter PR, other territories
         df = df.loc[-pd.isna(df['geo_value'])]
         df = df.drop(columns=['FIPS','state','Admin2'])
-    
+
     df = df.drop(columns=meta_cols)
-    
-    """
-    if measure == "hospitalizations":
-        # aggregate to cumulative sum 
-        df['value'] = df['value'].fillna(0)
-        df['cumsum'] = df.groupby(['geo_value'])['value'].cumsum()
-        df = df.drop('value', axis=1)
-        df = df.rename(columns={'cumsum': 'value'})
-    """
     
     df = df.pivot(index='time_value', columns='geo_value', values='value')
     df = df.rename_axis(None)
+
+    if spatial_resolution == "nation" and measure == "hospitalizations":
+        df[df.index < "2020-10-01"] = onp.nan
+
     df.index = pd.to_datetime(df.index)
     
     return df

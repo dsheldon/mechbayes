@@ -9,12 +9,18 @@ from run_util import load_config, get_method
 import data_cleaning
 
 if __name__ == "__main__":
+    
+    def boolean_string(s):
+      if s not in {'False', 'True'}:
+          raise ValueError('Not a valid boolean string')
+      return s == 'True'
 
     parser = argparse.ArgumentParser(description='Run forecast model for one location.')
 
     parser.add_argument('place', help='location (e.g., US state)')
     
     parser.add_argument('--config_file', help='configuration file (default: config.json)', default='config.json')    
+    parser.add_argument('--use_hosp_as_death', choices = [True, False], nargs="?", default=False, type = boolean_string)
     parser.add_argument('--start', help='start date', default='2020-03-04')
     parser.add_argument('--end', help='end date (i.e., forecast date)', default=None)
     parser.add_argument('--prefix', help='path prefix for saving results', default='results')
@@ -38,6 +44,7 @@ if __name__ == "__main__":
     if args.run:
         util.run_place(data,
                        args.place,
+                       use_hosp_as_death = args.use_hosp_as_death,
                        start=args.start,
                        end=forecast_date,
                        prefix=args.prefix,
@@ -46,6 +53,7 @@ if __name__ == "__main__":
     
     util.gen_forecasts(data,
                        args.place,
+                       use_hosp_as_death = args.use_hosp_as_death,
                        start=args.start,
                        prefix=args.prefix,
                        model_type=model_type,

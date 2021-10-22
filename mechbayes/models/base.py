@@ -327,7 +327,7 @@ class SEIRDBase(Model):
 
         return {
             'confirmed': self.data['confirmed'].values,
-            'death': self.data['hospitalization'].values
+            'death': self.data['death'].values
            }
     
 
