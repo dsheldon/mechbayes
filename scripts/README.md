@@ -65,7 +65,14 @@ useful to look for and address serious data issues on Sunday so that they are fi
         * The third argument is the size of the correction. In the example above, the initial reported value was 167, and we wanted 17 deaths to be reported for that date after the adjustment was made, so the size of the correction to make is `167 - 17 = 150`.
         * The fourth argument is the number of days back over which the adjustment should be distributed. In this case, we're distributing the 150 extra reported deaths over the past `12 * 30 = 360` days. To move the exess forward in time, you could provide a negative offset.
         * The last argument is the variable for which the adjustment should be made.
-    * Commit your changes to `data_cleaning.py` to the main branch and push them to the mechbayes repo.
+    * Commit your changes to `data_cleaning.py` to the main branch and push them to the mechbayes repo. You can use your favorite git UI or commands like:
+
+    ~~~ bash
+    git add data_cleaning.py
+    git commit -m "update data cleaning with fix for AR"
+    git push origin main
+    ~~~
+
     * Make sure changes are propagated to where you will run the model (i.e., do a `git pull origin main` in the mechbayes repo clone on the cluster that will be used for running the models). If you're making the changes on a Sunday, this will happen automatically before the Monday morning run, so you don't need to take any action. If you're making changes on a Monday you'll have to do this manually.
 
 ## Monday: Final check and submission
@@ -104,27 +111,31 @@ The main script for launching and collecting forecasts is `launch.py`. The basic
     
     b. Back up samples files if you want them
     ~~~ bash
-    cp US/renewal/2021-08-01/samples/{MA,NY}.npz /some/safe/location
+    cd /mnt/nfs/work1/eray/eray/mechbayes
+    cp US/renewal/2021-08-01/samples/{MA,NY}.npz backup/
     ~~~
 
-    c. Selectively re-run forecasts
+    c. After making fixes to outliers on your local machine, make sure you have the updates to `data_cleaning.py` and selectively re-run forecasts. Your working directory should be `~/mechbayes/scripts`. In this command, you may need to update the `forecast_group` to `US` or `EU`, the `model_configs` to whichever model variation you want to rerun (most often `renewal` for the US or `renewal_21` for the EU), and the `places` to whichever locations you need to rerun.
     ~~~ bash
+    git pull origin main
     python3 launch.py --forecast_group US --num_sundays 1 --model_configs renewal --places MA NY
     ~~~
 
     d. Or replace samples with ones from a different model, then rerun with the `--no-run` option to re-create the forecast plots.
     ~~~ bash
+    cd /mnt/nfs/work1/eray/eray/mechbayes
     cp US/frozen_21/2021-08-01/samples/{MA,NY}.npz US/renewal/2021-08-01/samples/
+    cd ~/mechbayes/scripts
     python3 launch.py --forecast_group US --num_sundays 1 --model_configs renewal --places MA NY --no-run    
     ~~~
     
     e. Monitor jobs
     ~~~ bash
     squeue -u sheldon  # use your username
-    tail -f log/renewal/2021-08-01/MA.err    # to monitor progress of model run
+    tail -f log/renewal/2021-08-01/MA.err    # to monitor progress of model run; working directory is ~/mechbayes/scripts
     ~~~
     
-    f. After all jobs are complete, re-collect output (to update submission file and vis)
+    f. After all jobs are complete, re-collect output (to update submission file and vis); working directory is ~/mechbayes/scripts
     ~~~ bash
     python3 launch.py --forecast_group US --num_sundays 1 --model_configs renewal --mode collect    
     ~~~
