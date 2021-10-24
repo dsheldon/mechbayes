@@ -13,6 +13,7 @@ def load_and_massage(url):
     df = df.rename(columns={'Province/State' : 'province', 'Country/Region' : 'country'})
     df = df.drop(columns=['province']).groupby('country').sum()
     df = df.T
+    df = df.diff()
     df.index = pd.to_datetime(df.index)
     return df
 
@@ -208,7 +209,6 @@ def load_us(source = "jhu", counties=False):
 
         df = df.T
         df = df.diff()
-        #df = df[1:]
         df.index = pd.to_datetime(df.index)
 
         
