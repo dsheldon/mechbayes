@@ -92,6 +92,7 @@ def clean(data, forecast_date):
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+    util.redistribute(data['AK']['data'], '2021-10-19', 66-26, 7, 'death')
 
     # https://www.kark.com/news/health/coronavirus/covid-19-in-arkansas-deaths-up-by-almost-300-because-of-data-adjustment/
     util.redistribute(data['AR']['data'], '2021-10-10', 167 - 17, 12*30, 'death')
