@@ -202,8 +202,9 @@ def smooth_to_weekly(data, forecast_date, place, var, start_date, end_date=None)
         # get total cases/deaths for week
         right = reporting_date
         left = reporting_date - pd.Timedelta("1w")
-        cum_tot = series[right]
-        weekly_tot = series[right] - series[left]
+        cum_sum_series = onp.cumsum(series)
+        cum_tot = cum_sum_series[right]
+        weekly_tot = cum_sum_series[right] - cum_sum_series[left]
         
         # construct incident time series with cases/deaths
         # spread evenly through week
@@ -218,10 +219,12 @@ def smooth_to_weekly(data, forecast_date, place, var, start_date, end_date=None)
         incident[scrambled_days[:rem]] += 1   
         
         # now reconstruct cumulative series from incident
-        series[left+pd.Timedelta("1d"):right] = series[left] + onp.cumsum(incident)        
+        series[left+pd.Timedelta("1d"):right] = incident  
+
+        cum_sum_series = onp.cumsum(series)      
         
-        assert(series[right] - series[left] == weekly_tot)
-        assert(series[right] == cum_tot)
+        assert(cum_sum_series[right] - cum_sum_series[left] == weekly_tot)
+        assert(cum_sum_series[right] == cum_tot)
     
     # if we didn't explicitly stop smoothing (e.g., because location
     # went back to daily reporting), assume all observations after
