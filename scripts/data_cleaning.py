@@ -7,7 +7,7 @@ NO_SUNDAY_DATA = ['ME']
 NO_WEEKEND_DATA = [
     'WA',
     'RI',
-    #'GU',
+    'GU',
     'KS',
     'CT',
     'TN',
@@ -51,13 +51,19 @@ def clean(data, forecast_date):
     
     '''Adjustments for weekly reporting irregularities. Don't need to update each week'''
     
-    # Set weekends to missing
+    # Set weekends to missing for cases data
     util.set_trailing_weekend_zeros_to_missing(data,
+                                               'confirmed',
                                                forecast_date, 
                                                NO_SUNDAY_DATA, 
                                                NO_WEEKEND_DATA)
-
-
+    
+    # Set weekends to missing for death data
+    util.set_trailing_weekend_zeros_to_missing(data,
+                                               'death',
+                                               forecast_date, 
+                                               NO_SUNDAY_DATA, 
+                                               NO_WEEKEND_DATA)
 
     # Make manual adjustments
     make_manual_adjustments(data, forecast_date)
@@ -99,7 +105,6 @@ def make_manual_adjustments(data, forecast_date):
     util.redistribute(data['NY']['data'], '2020-08-21', 455 - 85, 40, 'hospitalization')
 
     util.redistribute(data['NM']['data'], '2020-11-10', 206 - 110, 10, 'hospitalization')
-    # NEEDS MORE?
     util.redistribute(data['NH']['data'], '2020-08-24', 93 - 40, 24, 'hospitalization')
 
     util.redistribute(data['NC']['data'], '2020-08-30', 643 - 160, 7*5, 'hospitalization')
