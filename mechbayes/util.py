@@ -134,6 +134,7 @@ def redistribute(df, date, n, k, col='death'):
 
 
 def set_trailing_weekend_zeros_to_missing(data,
+                                          col,
                                           forecast_date,
                                           no_sunday_data_places,
                                           no_weekend_data_places):
@@ -177,16 +178,16 @@ def set_trailing_weekend_zeros_to_missing(data,
         saturday = forecast_date - pd.Timedelta('1d')
 
         for place in no_sunday_data_places + no_weekend_data_places:
-            data[place]['data'].loc[sunday, :] = onp.nan
+            data[place]['data'].loc[sunday, col] = onp.nan
 
         for place in no_weekend_data_places:
-            data[place]['data'].loc[saturday, :] = onp.nan
+            data[place]['data'].loc[saturday, col] = onp.nan
 
     elif forecast_date.dayofweek == 5: # forecast on saturday
 
         saturday = forecast_date
         for place in no_weekend_data_places:
-            data[place]['data'].loc[saturday, :] = onp.nan
+            data[place]['data'].loc[saturday, col] = onp.nan
 
 
 def smooth_to_weekly(data, forecast_date, place, var, start_date, end_date=None):
@@ -218,7 +219,7 @@ def smooth_to_weekly(data, forecast_date, place, var, start_date, end_date=None)
         scrambled_days = [3, 0, 6, 2, 5, 4, 1]
         incident[scrambled_days[:rem]] += 1   
         
-        # now reconstruct cumulative series from incident
+        # now reconstruct incident series 
         series[left+pd.Timedelta("1d"):right] = incident  
 
         cum_sum_series = onp.cumsum(series)      

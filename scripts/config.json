@@ -194,10 +194,10 @@
 	    }
         },
 
-	"US": {
-	    "comment" : ["For US forecast hub submissions",
-			 " -- submit renewal model",
-			 " -- use renewal_14 as backup"],
+	    "US_issue_1_test": {
+	        "comment" : ["For US forecast hub submissions",
+			             " -- submit renewal model",
+			             " -- use renewal_14 as backup"],
             "region": "US_and_states_sorted",
             "start" : "2020-03-04",
             "model_configs" : ["renewal", "renewal_14"],
@@ -210,39 +210,10 @@
                 "team_name" : "UMass",
                 "model_name" : "MechBayes"
             },
-	    "publish": true,
-	    "publish_args": {
-		"host" : "doppler",
-		"dest":  "/var/www/html/covid/weekly_submission"
-	    },
-	    "score_args": {
-                "num_weeks" : 4,
-                "targets" : ["inc death", "cum death"]
-	    }
-        },
-
-        "test_hosp_US": {
-            "comment" : ["For US forecast hub submissions",
-                 " -- submit renewal model",
-                 " -- use renewal_14 as backup",
-                 " -- use llonger_H_fix, frozen_21, frozen_28 as extra backups,",
-                 "    but retire them after 2021-08-15 forecasts"],
-                "region": "US_and_states_sorted_hosp",
-                "start" : "2020-03-04",
-                "model_configs" : ["renewal_hosp", "renewal_14_hosp"],
-                "submission" : true,
-                "submission_args": {
-                    "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
-                                  0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
-                    "num_weeks" : 4,
-                    "targets" : ["inc death", "cum death"],
-                    "team_name" : "UMass",
-                    "model_name" : "MechBayes"
-                },
             "publish": true,
             "publish_args": {
-            "host" : "doppler",
-            "dest":  "/var/www/html/covid"
+                "host" : "doppler",
+                "dest":  "/var/www/html/covid/serena"
             },
             "score_args": {
                     "num_weeks" : 4,
@@ -250,8 +221,37 @@
             }
         },
 
-        "EU": {
-	    "comment" : "EU forecast hub submissions",
+        "test_hosp_US": {
+            "comment" : ["For US forecast hub submissions",
+                         " -- submit renewal model",
+                         " -- use renewal_14 as backup",
+                         " -- use llonger_H_fix, frozen_21, frozen_28 as extra backups,",
+                         "    but retire them after 2021-08-15 forecasts"],
+            "region": "US_and_states_sorted_hosp",
+            "start" : "2020-03-04",
+            "model_configs" : ["renewal_hosp", "renewal_14_hosp"],
+            "submission" : true,
+            "submission_args": {
+                "quantiles": [0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
+                              0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975, 0.99],
+                "num_weeks" : 4,
+                "targets" : ["inc death", "cum death"],
+                "team_name" : "UMass",
+                "model_name" : "MechBayes"
+            },
+            "publish": true,
+            "publish_args": {
+                "host" : "doppler",
+                "dest":  "/var/www/html/covid"
+            },
+            "score_args": {
+                "num_weeks" : 4,
+                "targets" : ["inc death", "cum death"]
+            }
+        },
+
+        "EU_issue_1_test": {
+	        "comment" : "EU forecast hub submissions",
             "region": "EU",
             "start"  : "2020-03-04",
             "model_configs" : ["renewal", "renewal_14", "renewal_21", "renewal_28"],
@@ -264,19 +264,19 @@
                 "team_name" : "UMass",
                 "model_name" : "MechBayes"                
             },
-	    "publish": true,
-	    "publish_args": {
-		"host" : "doppler",
-		"dest":  "/var/www/html/covid/weekly_submission"
-	    },
-	    "score_args": {
-                "num_weeks" : 4,
-                "targets" : ["inc death"]
-	    }
+            "publish": true,
+            "publish_args": {
+            "host" : "doppler",
+            "dest":  "/var/www/html/covid/serena"
+            },
+            "score_args": {
+                    "num_weeks" : 4,
+                    "targets" : ["inc death"]
+            }
         },
 
         "compare_EU_serena": {
-	    "comment" : "Retrospective model comparison between renewal and diff eq models in early August 2021. Can be retired soon",
+            "comment" : "Retrospective model comparison between renewal and diff eq models in early August 2021. Can be retired soon",
             "region": "EU",
             "start" : "2020-03-04",
             "model_configs" : ["renewal", "renewal_14", "renewal_21", "renewal_28"],
@@ -289,15 +289,15 @@
                 "team_name" : "UMass",
                 "model_name" : "MechBayes"
             },
-	    "publish": true,
-	    "publish_args": {
-		"host" : "doppler",
-		"dest":  "/var/www/html/covid/serena"
-	    },
-	    "score_args": {
+            "publish": true,
+            "publish_args": {
+                "host" : "doppler",
+                "dest":  "/var/www/html/covid/serena"
+            },
+            "score_args": {
                 "num_weeks" : 4,
                 "targets" : ["inc death"]
-	    }
+            }
         }
     }
 }

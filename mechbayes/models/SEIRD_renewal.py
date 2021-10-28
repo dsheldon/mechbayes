@@ -166,7 +166,7 @@ class SEIRD(SEIRDBase):
         '''        
                 
         # Sample initial time series of exposed individuals and 
-        # initial (cumulative) number of cases and deaths        
+        # initial (incidence) number of cases and deaths        
         seed_length = 10;
         dE_init = numpyro.sample("dE_init", dist.Uniform(0, 1e-4*N*np.ones(seed_length)))
         I0 = numpyro.sample("I0", dist.Uniform(0, 1e-4*N))
@@ -216,17 +216,14 @@ class SEIRD(SEIRDBase):
         if confirmed is None:
             confirmed0, confirmed = (None, None)
         else:
-            confirmed0 = confirmed[0]  # this is cumulative number of cases by start date
-            #confirmed = clean_daily_obs(onp.diff(confirmed))
+            confirmed0 = confirmed[0]  # this is incidence number of cases by start date
             confirmed = clean_daily_obs(confirmed[1:])
 
         if death is None:
             death0, death = (None, None)
         else: 
             death0 = death[0]
-            #death = clean_daily_obs(onp.diff(death))
             death = clean_daily_obs(death[1:])
-            #death = clean_daily_obs(death)
         
         params = (beta0, 
                   sigma, 
