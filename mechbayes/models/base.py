@@ -304,6 +304,7 @@ class Model():
             ax.set_ylim([bottom, pi_max])
         else:
             top = np.minimum(2*median_max, pi_max)
+            top = np.maximum(top, obs.max() + 1)
             ax.set_ylim([0, top])
 
         

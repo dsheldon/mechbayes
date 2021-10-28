@@ -90,6 +90,10 @@ def clean(data, forecast_date):
     # OK reports cases daily, but deaths once/week
     util.smooth_to_weekly(data, forecast_date, 'OK', 'death',     '2021-03-24')
 
+    # Manual adjustment for OK after redistributing to weekly
+    # util.redistribute(data['OK']['data'], '2021-10-20', 163 - 40, 365, 'death')
+
+
     # OH death data is delayed, so recent weeks always appear as zeros. 
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
@@ -131,6 +135,14 @@ def make_manual_adjustments(data, forecast_date):
     util.redistribute(data['AL']['data'], '2021-07-01', 281 - 50, 7*3, 'hospitalization')
     util.redistribute(data['CT']['data'], '2020-08-03', 48 - 15, 7*2, 'hospitalization')
     # end of hospitalization adjustments
+
+    util.redistribute(data['OK']['data'], '2021-10-20', 1138 - 200, 365, 'death')
+
+    util.redistribute(data['AK']['data'], '2021-10-19', 66-26, 7, 'death')
+
+    # https://www.kark.com/news/health/coronavirus/covid-19-in-arkansas-deaths-up-by-almost-300-because-of-data-adjustment/
+    util.redistribute(data['AR']['data'], '2021-10-10', 167 - 17, 12*30, 'death')
+    util.redistribute(data['AR']['data'], '2021-10-11', 134 - 17, 12*30, 'death')
 
     util.redistribute(data['NY']['data'], '2021-08-15', 235 - 45, 30, 'death')
 
