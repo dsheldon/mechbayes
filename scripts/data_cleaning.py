@@ -623,7 +623,13 @@ def make_manual_adjustments(data, forecast_date):
     #
     # https://twitter.com/natalie_krebs?lang=en
     # https://www.iowapublicradio.org/health/2020-12-08/iowa-officials-announce-change-in-methodology-that-raises-covid-19-death-count-by-175
-    data['IA']['data'].loc['2020-12-7':'2020-12-12','death'] = [2919, 3021, 3120, 3197, 3212, 3213]
+    
+    # This particular case is adjusted by line 631 instead because input data are incident counts now. 
+    # data['IA']['data'].loc['2020-12-7':'2020-12-12','death'] = [2919, 3021, 3120, 3197, 3212, 3213]
+   
+    # This list of new incident value is calculated as [2919-2717, onp.diff[list of cumulative values above]]
+    # 2919 is cumulative value on 2020-12-06 (as of 2021 October)
+    data['IA']['data'].loc['2020-12-7':'2020-12-12','death'] = [202, 102,  99,  77,  15,   1]
     util.redistribute(data['IA']['data'], '2020-12-07', 175, 60, 'death')
 
     # AL antigen backlogs in December
