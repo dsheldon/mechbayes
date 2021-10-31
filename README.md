@@ -6,7 +6,7 @@ This repository contains code for Bayesian modeling of COVID-19 using [numpyro](
 
 ## Team
 
-The team is based at the [College of Information and Computer Sciences](https://www.cics.umass.edu/) and [School of Public Health & Health Sciences](https://www.umass.edu/sphhs/) at [UMass](https://www.umass.edu). The model contributors are:
+The team is based at the [College of Information and Computer Sciences](https://www.cics.umass.edu/) and [School of Public Health & Health Sciences](https://www.umass.edu/sphhs/) at [UMass](https://www.umass.edu). The model creators, contributors, and weekly crank-turners are:
 
 * [Dan Sheldon](https://people.cs.umass.edu/~sheldon/)
 * [Casey Gibson](https://gcgibson.github.io/)
@@ -15,14 +15,14 @@ The team is based at the [College of Information and Computer Sciences](https://
 * [Nutcha Wattanachit](https://reichlab.io/people)
 * [Nick Reich](https://reichlab.io/people)
 
-Dr. Reich directs the [CDC Influenza Forecasting Center of Excellence](https://www.umass.edu/newsoffice/article/cdc-designates-umass-amherst-flu) at UMass.
+Dr. Reich and Dr. Ray direct the [CDC Influenza Forecasting Center of Excellence](https://www.umass.edu/newsoffice/article/cdc-designates-umass-amherst-flu) at UMass.
 
 ## Installation
 
 Our code depends on numpyro and jax. If you don't have these packages, our installation routine will pull and install them:
 ~~~
 git clone https://github.com/dsheldon/mechbayes
-cd covid
+cd mechbayes
 pip install -e .
 ~~~
 
