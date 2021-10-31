@@ -96,6 +96,14 @@ def clean(data, forecast_date):
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+    
+    # https://www.wvtm13.com/article/alabama-health-department-covid-case-backlog-reporting/38080933#
+    # there was some mention of "previous months" in article above, so choosing 90
+    util.redistribute(data['AL']['data'], '2021-10-27', 7393 - 700, 90, 'confirmed')
+    util.redistribute(data['AL']['data'], '2021-10-28', 2141 - 700, 90, 'confirmed')
+
+    util.redistribute(data['NE']['data'], '2021-10-27', 3311 - 850, 4, 'confirmed')
+    
     util.redistribute(data['OK']['data'], '2021-10-20', 1138 - 200, 365, 'death')
 
     util.redistribute(data['AK']['data'], '2021-10-19', 66-26, 7, 'death')
