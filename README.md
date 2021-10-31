@@ -10,6 +10,9 @@ The team is based at the [College of Information and Computer Sciences](https://
 
 * [Dan Sheldon](https://people.cs.umass.edu/~sheldon/)
 * [Casey Gibson](https://gcgibson.github.io/)
+* [Evan Ray](https://reichlab.io/people)
+* [Serena Wang](https://reichlab.io/people)
+* [Nutcha Wattanachit](https://reichlab.io/people)
 * [Nick Reich](https://reichlab.io/people)
 
 Dr. Reich directs the [CDC Influenza Forecasting Center of Excellence](https://www.umass.edu/newsoffice/article/cdc-designates-umass-amherst-flu) at UMass.
