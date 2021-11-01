@@ -84,14 +84,15 @@ useful to look for and address serious data issues on Sunday so that they are fi
         2. Selectively replace one model's forecasts with another's. Sometimes, one model will fail for a given location and another will succeed. In that case, you can just replace the failed model's forecasts with the forecasts from the model that succeeded, using steps 5d, 5e, and 5f below.
  * Download the submission files from the appropriate model folder on Doppler
     * By default, we use `renewal` the US and `renewal_21` for the EU. The submission files can be downloaded from a folder like http://doppler.cs.umass.edu/covid/weekly_submission/US/renewal/2021-10-17/
- * Submit by making pull requests to the `covid19-forecast-hub` and `covid19-forecast-hub-europe` repositories.
+ * Submit by making pull requests to the [`covid19-forecast-hub`](https://github.com/reichlab/covid19-forecast-hub) and [`covid19-forecast-hub-europe`](https://github.com/epiforecasts/covid19-forecast-hub-europe) repositories.
 
 ## Running Forecasts
-The main script for launching and collecting forecasts is `launch.py`. The basic steps are:
+Forecasts are run on the `swarm2` cluster by authorized users. The user should navigate to their `mechbayes` directory, that is a clone of this repository.
+The main script for launching and collecting forecasts is `scripts/launch.py`. The basic steps are:
 
 1. Edit `config.json` if needed
 
-2. Launch forecasts
+2. Launch forecasts (the following line assumes you are in the `scripts/` directory): 
 
     ~~~ bash
     python3 launch.py --forecast_group US --num_sundays 1
