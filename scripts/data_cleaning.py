@@ -104,6 +104,10 @@ def make_manual_adjustments(data, forecast_date):
 
     util.redistribute(data['NE']['data'], '2021-10-27', 3311 - 850, 4, 'confirmed')
     
+    ## decided to set recent daily death to something like the moving average (5)
+    ## and redistribute the days over the last 100 days (the delta period?)
+    util.redistribute(data['NE']['data'], '2021-10-27', 481 - 5, 100, 'death')
+    
     util.redistribute(data['OK']['data'], '2021-10-20', 1138 - 200, 365, 'death')
 
     util.redistribute(data['AK']['data'], '2021-10-19', 66-26, 7, 'death')
