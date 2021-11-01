@@ -19,7 +19,7 @@
         "renewal_hosp": {
             "comment": "vanilla renewal model to match operational MB",
                 "model": "mechbayes.models.SEIRD_renewal.SEIRD",
-                "use_hosp_as_death": "True",
+                "use_hosp_as_death": true,
                 "args"  : {
                     "gamma_shape":  1000,
                     "sigma_shape":  1000,
@@ -47,7 +47,7 @@
         "renewal_14_hosp": {
             "comment": "renewal model with contact rate frozen for last 14 days",
                 "model": "mechbayes.models.SEIRD_renewal.SEIRD",
-                "use_hosp_as_death": "True",
+                "use_hosp_as_death": true,
                 "args"  : {
                     "gamma_shape":  1000,
                     "sigma_shape":  1000,

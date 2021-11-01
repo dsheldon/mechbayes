@@ -106,13 +106,13 @@ class SEIRD(SEIRDBase):
             confirmed0, confirmed = (None, None)
         else:
             confirmed0 = confirmed[0]
-            confirmed = clean_daily_obs(confirmed[1:])
+            confirmed = clean_daily_obs(confirmed)
             
         if death is None:
             death0, death = (None, None)
         else: 
             death0 = death[0]
-            death = clean_daily_obs(death[1:])
+            death = clean_daily_obs(death)
 
         # First observation
         with numpyro.handlers.scale(scale=0.5):

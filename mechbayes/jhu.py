@@ -225,12 +225,12 @@ def load_us(source = "jhu", counties=False):
     elif source == "covidcast":
         if counties:
             confirmed = load_us_covidcast("cases", "county")
-            deaths = load_us_covidcast("cases", "county")
+            deaths = load_us_covidcast("deaths", "county")
             # A dataframe with nan
             hosps = pd.DataFrame(columns=deaths.columns, index=deaths.index)
         else:
             confirmed = load_us_covidcast("cases", "state")
-            deaths = load_us_covidcast("cases", "state")
+            deaths = load_us_covidcast("deaths", "state")
             hosps = load_us_covidcast("hospitalizations", "state")
         
     # Combine deaths, hospitalizations, and confirmed

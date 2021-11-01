@@ -1,4 +1,3 @@
-from pickle import FALSE
 import sys
 import traceback
 import warnings

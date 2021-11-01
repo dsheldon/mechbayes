@@ -217,14 +217,12 @@ class SEIRD(SEIRDBase):
             confirmed0, confirmed = (None, None)
         else:
             confirmed0 = confirmed[0]  # this is incidence number of cases by start date
-            confirmed = clean_daily_obs(confirmed[1:])
-
+            confirmed = clean_daily_obs(confirmed)
         if death is None:
             death0, death = (None, None)
         else: 
             death0 = death[0]
-            death = clean_daily_obs(death[1:])
-        
+            death = clean_daily_obs(death)
         params = (beta0, 
                   sigma, 
                   gamma, 
@@ -242,7 +240,7 @@ class SEIRD(SEIRDBase):
         dy0 = observe_nb2("dy0", I0, det_prob0, confirmed_dispersion, obs=confirmed0)
         dz0 = observe_nb2("dz0", D0, det_prob_d, death_dispersion, obs=death0)
                
-        beta, det_prob, dE, dI, dD, dy, dz = self.dynamics(T-1, 
+        beta, det_prob, dE, dI, dD, dy, dz = self.dynamics(T, 
                                                            params, 
                                                            dE_init,
                                                            N,
