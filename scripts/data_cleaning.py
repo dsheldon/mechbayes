@@ -372,7 +372,7 @@ def make_manual_adjustments(data, forecast_date):
     # JHU: 2,029 historical cases; Ellis County reported 294
     util.redistribute(data['TX']['data'], '2021-03-26', 2029+294, 90, 'confirmed')
 
-    #util.redistribute(data['MN']['data'], '2021-03-25', 20, 20, 'death')
+    util.redistribute(data['MN']['data'], '2021-03-25', 20, 20, 'death')
     util.redistribute(data['VI']['data'], '2021-03-24', 100, 14, 'confirmed')
     util.redistribute(data['NE']['data'], '2021-03-24', 25, 20, 'death')
 
@@ -485,7 +485,7 @@ def make_manual_adjustments(data, forecast_date):
 
     # https://github.com/CSSEGISandData/COVID-19/issues/3705
     # (backdistributed week of March 1)
-    util.redistribute(data['IA']['data'], '2021-02-19', 26775, 200, 'confirmed')
+    #util.redistribute(data['IA']['data'], '2021-02-19', 26775, 200, 'confirmed')
     
 
     # https://covidtracking.com/data/state/ohio/notes
