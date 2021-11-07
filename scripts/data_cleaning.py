@@ -96,6 +96,19 @@ def clean(data, forecast_date):
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+    # spread cases across the previous 2 days that had 0
+    util.redistribute(data['MN']['data'], '2021-11-01', 10434-7000, 2, 'confirmed')
+    # https://content.govdelivery.com/accounts/ORDHS/bulletins/2f8912c
+    util.redistribute(data['OR']['data'], '2021-11-02', 45-27, 4, 'death')
+    util.redistribute(data['OR']['data'], '2021-11-03', 71-27, 4, 'death')
+    util.redistribute(data['OR']['data'], '2021-11-04', 74-33, 6, 'death')
+    util.redistribute(data['OR']['data'], '2021-11-04', 5, -1, 'death')
+    # NH reporting issue
+    util.redistribute(data['NH']['data'], '2021-10-28', 781-730, 1, 'confirmed')
+    util.redistribute(data['NH']['data'], '2021-11-01', 3834-760, 4, 'confirmed')
+    util.redistribute(data['NH']['data'], '2021-11-01', 500, -1, 'confirmed')
+    util.redistribute(data['NH']['data'], '2021-11-02', 120, -1, 'confirmed')
+    util.redistribute(data['NH']['data'], '2021-11-01', 24-6, 4, 'death')
     
     # https://www.wvtm13.com/article/alabama-health-department-covid-case-backlog-reporting/38080933#
     # there was some mention of "previous months" in article above, so choosing 90
