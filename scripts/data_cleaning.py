@@ -87,7 +87,6 @@ def clean(data, forecast_date):
     # Manual adjustment for OK after redistributing to weekly
     # util.redistribute(data['OK']['data'], '2021-10-20', 163 - 40, 365, 'death')
 
-
     # OH death data is delayed, so recent weeks always appear as zeros. 
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
@@ -96,6 +95,9 @@ def clean(data, forecast_date):
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+    # spread large case count for PA over the previous 5 months, leave 6000 cases
+    util.redistribute(data['PA']['data'], '2021-11-13', 20320-6000, 150, 'confirmed')
+   
     # spread cases across the previous 2 days that had 0
     util.redistribute(data['MN']['data'], '2021-11-01', 10434-7000, 2, 'confirmed')
     # https://content.govdelivery.com/accounts/ORDHS/bulletins/2f8912c
