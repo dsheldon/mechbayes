@@ -64,7 +64,8 @@ useful to look for and address serious data issues on Sunday so that they are fi
         * The second argument is the date being corrected
         * The third argument is the size of the correction. In the example above, the initial reported value was 167, and we wanted 17 deaths to be reported for that date after the adjustment was made, so the size of the correction to make is `167 - 17 = 150`.
         * The fourth argument is the number of days back over which the adjustment should be distributed. In this case, we're distributing the 150 extra reported deaths over the past `12 * 30 = 360` days. To move the exess forward in time, you could provide a negative offset.
-        * The last argument is the variable for which the adjustment should be made.
+        * The last argument is the variable for which the adjustment should be made. Typically this will be either `death` or `confirmed` (the latter for redistributing incident cases).
+        * Note that for both `death` and `confirmed` the redistribution is occuring on the scale of incident reported deaths and cases.
     * Commit your changes to `data_cleaning.py` to the main branch and push them to the mechbayes repo. You can use your favorite git UI or commands like:
 
     ~~~ bash
