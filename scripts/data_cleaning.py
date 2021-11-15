@@ -87,6 +87,9 @@ def clean(data, forecast_date):
     # Manual adjustment for OK after redistributing to weekly
     # util.redistribute(data['OK']['data'], '2021-10-20', 163 - 40, 365, 'death')
 
+    # OK death data delayed on 11/15/2021, so data for recent 11 days is 0 or NA
+    data['OK']['data']['death'][forecast_date - pd.Timedelta("11d"):] = onp.nan
+
     # OH death data is delayed, so recent weeks always appear as zeros. 
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
