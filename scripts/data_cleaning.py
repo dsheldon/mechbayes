@@ -88,7 +88,7 @@ def clean(data, forecast_date):
     # util.redistribute(data['OK']['data'], '2021-10-20', 163 - 40, 365, 'death')
 
     # OK death data delayed on 11/15/2021, so data for recent 11 days is 0 or NA
-    data['OK']['data']['death'][forecast_date - pd.Timedelta("11d"):] = onp.nan
+    # data['OK']['data']['death'][forecast_date - pd.Timedelta("11d"):] = onp.nan
 
     # OH death data is delayed, so recent weeks always appear as zeros. 
     # Set trailing two weeks to missing
@@ -98,6 +98,21 @@ def clean(data, forecast_date):
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+    # "mini-bulk" report for OK on 11-12: https://github.com/CSSEGISandData/COVID-19/issues/4906
+    # i think some of this should be put in just the previous week, and some needs to be
+    # distributed further back...?
+    util.redistribute(data['OK']['data'], '2021-11-12', 250, 8, 'death')
+    util.redistribute(data['OK']['data'], '2021-11-12', 300, 28, 'death')
+
+    # https://github.com/CSSEGISandData/COVID-19/issues/4930
+    # per email from CSSE, ">6300" cases from full pandemic bulk reported
+    # I'm making it 9000 to better match neighboring data
+    util.redistribute(data['MO']['data'], '2021-11-18', 9000, 657, 'confirmed')
+
+    # https://chfs.ky.gov/agencies/dph/covid19/COVID19DailyReport.pdf
+    # 84 deaths reported on 2021-11-19 were from earlier
+    util.redistribute(data['KY']['data'], '2021-11-19', 84, 365, 'death')
+
     # spread large case count for PA over the previous 5 months, leave 6000 cases
     util.redistribute(data['PA']['data'], '2021-11-13', 20320-6000, 150, 'confirmed')
    
