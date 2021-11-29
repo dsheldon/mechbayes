@@ -12,3 +12,6 @@ out
 **~
 **.idea
 **.png
+.Rproj.user
+*.Rproj
+*.Rhistory

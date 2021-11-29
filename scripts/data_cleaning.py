@@ -135,6 +135,17 @@ def make_manual_adjustments(data, forecast_date):
     util.redistribute(data['AL']['data'], '2021-07-01', 281 - 50, 7*3, 'hospitalization')
     util.redistribute(data['CT']['data'], '2020-08-03', 48 - 15, 7*2, 'hospitalization')
     # end of hospitalization adjustments
+    
+    # https://www.wvtm13.com/article/alabama-health-department-covid-case-backlog-reporting/38080933#
+    # there was some mention of "previous months" in article above, so choosing 90
+    util.redistribute(data['AL']['data'], '2021-10-27', 7393 - 700, 90, 'confirmed')
+    util.redistribute(data['AL']['data'], '2021-10-28', 2141 - 700, 90, 'confirmed')
+
+    util.redistribute(data['NE']['data'], '2021-10-27', 3311 - 850, 4, 'confirmed')
+    
+    ## decided to set recent daily death to something like the moving average (5)
+    ## and redistribute the days over the last 100 days (the delta period?)
+    util.redistribute(data['NE']['data'], '2021-10-27', 481 - 5, 100, 'death')
 
     util.redistribute(data['OK']['data'], '2021-10-20', 1138 - 200, 365, 'death')
 
