@@ -99,7 +99,7 @@ def clean(data, forecast_date):
     data['IN']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
     data['NH']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
     data['VT']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
-    data['VW']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
+    data['WV']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
     data['TX']['data']['death'][forecast_date - pd.Timedelta("3d"):] = onp.nan
 
     # FL case data delay since 11/20, including Thanksgiving 11/25-11/28
