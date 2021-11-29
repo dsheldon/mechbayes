@@ -308,6 +308,8 @@ def run_place(data,
     numpyro.enable_x64()
 
     print(f"Running {place} (start={start}, end={end})")
+    print("start" + start)
+    print("end" + end)
     place_data = data[place]['data'][start:end]
     
     # plug in hosp data as death data
@@ -316,10 +318,21 @@ def run_place(data,
 
     T = len(place_data)
 
+    #obs_end = pd.to_datetime(start) + pd.Timedelta(T-1, "d")
+
+    data0 = onp.cumsum(data[place]['data'][:start])
+    #data0 = data[place]['data'][:obs_end]
+    death0 =  data0["death"][-1]
+    print(death0)
+    confirmed0 = data0["confirmed"][-1]
+    print(confirmed0)
+    
     model = model_type(
         data = place_data,
         T = T,
         N = data[place]['pop'],
+        death0 = death0,
+        confirmed0 = confirmed0,
         **kwargs
     )
     
@@ -433,11 +446,11 @@ def gen_forecasts(data,
     
     model = model_type()
 
-    confirmed = data[place]['data'].confirmed[start:end]
+    confirmed = data[place]['data'].confirmed#[start:end]
     if use_hosp_as_death:
-        death = data[place]['data'].hospitalization[start:end]
+        death = data[place]['data'].hospitalization#[start:end]
     else:
-        death = data[place]['data'].death[start:end]
+        death = data[place]['data'].death#[start:end]
 
     T = len(confirmed)
     N = data[place]['pop']

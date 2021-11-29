@@ -158,6 +158,8 @@ class SEIRD(SEIRDBase):
                  forecast_rw_scale = 0.,
                  num_frozen=0,
                  rw_use_last=1,
+                 confirmed0=None,
+                 death0=None,
                  confirmed=None,
                  death=None):
 
@@ -216,12 +218,12 @@ class SEIRD(SEIRDBase):
         if confirmed is None:
             confirmed0, confirmed = (None, None)
         else:
-            confirmed0 = confirmed[0]  # this is incidence number of cases by start date
+            confirmed0 = confirmed0  # this is incidence number of cases by start date
             confirmed = clean_daily_obs(confirmed)
         if death is None:
             death0, death = (None, None)
         else: 
-            death0 = death[0]
+            death0 = death0
             death = clean_daily_obs(death)
         params = (beta0, 
                   sigma, 
