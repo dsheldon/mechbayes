@@ -1,5 +1,5 @@
 {
-    "output_dir" : "/mnt/nfs/work1/eray/eray/mechbayes",
+    "output_dir" : "/mnt/nfs/work1/eray/wang225y/mechbayes",
 
     "model_configs" : {
 
@@ -194,12 +194,12 @@
 	    }
         },
 
-	    "US": {
+	    "US_issue_1_test": {
 	        "comment" : ["For US forecast hub submissions",
 			             " -- submit renewal model",
 			             " -- use renewal_14 as backup"],
             "region": "US_and_states_sorted",
-            "start" : "2020-03-04",
+            "start" : "2021-01-10",
             "model_configs" : ["renewal", "renewal_14"],
             "submission" : true,
             "submission_args": {
@@ -213,7 +213,7 @@
             "publish": true,
             "publish_args": {
                 "host" : "doppler",
-                "dest":  "/var/www/html/covid/weekly_submission"
+                "dest":  "/var/www/html/covid/serena"
             },
             "score_args": {
                     "num_weeks" : 4,
@@ -250,7 +250,7 @@
             }
         },
 
-        "EU": {
+        "EU_issue_1_test": {
 	        "comment" : "EU forecast hub submissions",
             "region": "EU",
             "start"  : "2020-03-04",
@@ -267,7 +267,7 @@
             "publish": true,
             "publish_args": {
             "host" : "doppler",
-            "dest":  "/var/www/html/covid/weekly_submission"
+            "dest":  "/var/www/html/covid/serena"
             },
             "score_args": {
                     "num_weeks" : 4,
