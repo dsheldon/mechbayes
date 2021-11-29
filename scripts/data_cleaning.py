@@ -94,10 +94,28 @@ def clean(data, forecast_date):
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
 
+    # data delay due to Thanksgiving 11/25-11/28
+    # need to change these for forecast date 12/05
+    data['IN']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
+    data['NH']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
+    data['VT']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
+    data['VW']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
+    data['TX']['data']['death'][forecast_date - pd.Timedelta("3d"):] = onp.nan
+
+    # FL case data delay since 11/20, including Thanksgiving 11/25-11/28
+    data['FL']['data']['confirmed'][forecast_date - pd.Timedelta("8d"):] = onp.nan
+
+
 
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+
+    # spread cases to thanksgiving
+    util.redistribute(data['MO']['data'], '2021-11-27', 699 - 220, 2, 'confirmed')
+    util.redistribute(data['MD']['data'], '2021-11-27', 2803 - 900, 2, 'confirmed')
+    util.redistribute(data['OH']['data'], '2021-11-26', 9143 - 4500, 1, 'confirmed')
+
     # "mini-bulk" report for OK on 11-12: https://github.com/CSSEGISandData/COVID-19/issues/4906
     # i think some of this should be put in just the previous week, and some needs to be
     # distributed further back...?
