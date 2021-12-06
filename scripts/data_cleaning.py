@@ -99,6 +99,24 @@ def clean(data, forecast_date):
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
 
+    # FL reported two weeks worth of deaths in one week, manually readjusting this week
+    # trying to force the trend to continue downwards, but making hand-waving calculations 
+    util.redistribute(data['FL']['data'], '2021-12-03', 40, 13, 'death')
+    util.redistribute(data['FL']['data'], '2021-12-02', 43, 12, 'death')
+    util.redistribute(data['FL']['data'], '2021-12-01', 46, 11, 'death')
+    util.redistribute(data['FL']['data'], '2021-11-30', 49, 10, 'death')
+    util.redistribute(data['FL']['data'], '2021-11-29', 52, 9, 'death')
+    util.redistribute(data['FL']['data'], '2021-11-28', 55, 8, 'death')
+    util.redistribute(data['FL']['data'], '2021-11-27', 58, 7, 'death')
+
+    # MD had one day of 30 deaths that may be triggering growth in death forecast
+    util.redistribute(data['MD']['data'], '2021-11-27', 30-12, 3, 'death')
+
+    # bulk report for MO on 2021-12-02, must be for a long time back!
+    # 20 deaths seems about right for daily deaths at this point
+    # computing the redistribution time as the difference between 2020-03-07 and 2021-12-02
+    util.redistribute(data['MO']['data'], '2021-12-02', 2441-20, 634, 'death')
+
     # "mini-bulk" report for OK on 11-12: https://github.com/CSSEGISandData/COVID-19/issues/4906
     # i think some of this should be put in just the previous week, and some needs to be
     # distributed further back...?
