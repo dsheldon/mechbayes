@@ -109,6 +109,15 @@ def make_manual_adjustments(data, forecast_date):
     util.redistribute(data['FL']['data'], '2021-11-28', 55, 8, 'death')
     util.redistribute(data['FL']['data'], '2021-11-27', 58, 7, 'death')
 
+    util.redistribute(data['FL']['data'], '2021-12-03', 1400, 13, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-12-02', 1500, 12, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-12-01', 1600, 11, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-11-30', 1700, 10, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-11-29', 1800, 9, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-11-28', 1900, 8, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-11-27', 2000, 7, 'confirmed')
+
+
     # MD had one day of 30 deaths that may be triggering growth in death forecast
     util.redistribute(data['MD']['data'], '2021-11-27', 30-12, 3, 'death')
 
