@@ -318,14 +318,9 @@ def run_place(data,
 
     T = len(place_data)
 
-    #obs_end = pd.to_datetime(start) + pd.Timedelta(T-1, "d")
-
     data0 = onp.cumsum(data[place]['data'][:start])
-    #data0 = data[place]['data'][:obs_end]
     death0 =  data0["death"][-1]
-    print(death0)
     confirmed0 = data0["confirmed"][-1]
-    print(confirmed0)
     
     model = model_type(
         data = place_data,
