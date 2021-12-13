@@ -98,6 +98,17 @@ def clean(data, forecast_date):
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+    # KY has an unexplained death spike on a single day, so spread it out a bit
+    util.redistribute(data['KY']['data'], '2021-12-06', 198-110, 4, 'death')
+    # small adjustment for NH
+    util.redistribute(data['NH']['data'], '2021-12-07', 6, 1, 'death')
+    # adjust WI's single-day death spike
+    util.redistribute(data['WI']['data'], '2021-12-08', 126-60, 2, 'death')
+    # MI adjustments for deaths added on multiple days
+    util.redistribute(data['MI']['data'], '2021-11-29', 50, 4, 'death')
+    util.redistribute(data['MI']['data'], '2021-12-01', 399-180, 2, 'death')
+    util.redistribute(data['MI']['data'], '2021-12-03', 310-170, 2, 'death')
+    util.redistribute(data['MI']['data'], '2021-12-08', 409-260, 2, 'death')
 
     # FL reported two weeks worth of deaths in one week, manually readjusting this week
     # trying to force the trend to continue downwards, but making hand-waving calculations 
