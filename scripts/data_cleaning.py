@@ -93,7 +93,9 @@ def clean(data, forecast_date):
     # OH death data is delayed, so recent weeks always appear as zeros. 
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
-
+    # MD death and case data issues
+    data['MD']['data']['death'][forecast_date - pd.Timedelta("7d"):] = onp.nan
+    data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("7d"):] = onp.nan
 
 
 def make_manual_adjustments(data, forecast_date):
@@ -109,6 +111,11 @@ def make_manual_adjustments(data, forecast_date):
     util.redistribute(data['MI']['data'], '2021-12-01', 399-180, 2, 'death')
     util.redistribute(data['MI']['data'], '2021-12-03', 310-170, 2, 'death')
     util.redistribute(data['MI']['data'], '2021-12-08', 409-260, 2, 'death')
+    # MD case adjustments
+    util.redistribute(data['MD']['data'], '2021-11-27', 1200, 7, 'confirmed')
+    util.redistribute(data['MD']['data'], '2021-12-02', 450, 4, 'confirmed')
+    util.redistribute(data['MD']['data'], '2021-12-03', 650, 5, 'confirmed')
+    util.redistribute(data['MD']['data'], '2021-12-04', 700, 6, 'confirmed')
 
     # FL reported two weeks worth of deaths in one week, manually readjusting this week
     # trying to force the trend to continue downwards, but making hand-waving calculations 
