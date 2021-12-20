@@ -94,12 +94,27 @@ def clean(data, forecast_date):
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
     # MD death and case data issues
-    data['MD']['data']['death'][forecast_date - pd.Timedelta("7d"):] = onp.nan
-    data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("7d"):] = onp.nan
+    data['MD']['data']['death'][forecast_date - pd.Timedelta("14d"):] = onp.nan
+    data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("14d"):] = onp.nan
 
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+    util.redistribute(data['VT']['data'], '2021-11-29', 1681 - 300, 4, 'confirmed')
+
+    util.redistribute(data['VI']['data'], '2021-12-14', 2218, -1, 'confirmed')
+
+    # https://www.youtube.com/watch?v=AMtWWVwAbz4
+    # https://spectrumlocalnews.com/me/maine/news/2021/12/17/covid-hospitalizations-continue-at-high-level
+    util.redistribute(data['ME']['data'], '2021-12-16', 20, 38, 'death')
+    util.redistribute(data['ME']['data'], '2021-12-17', 19, 36, 'death')
+
+    # https://www.adn.com/alaska-news/2021/12/17/alaska-on-friday-reports-57-deaths-mostly-from-the-fall-and-408-virus-cases-over-past-2-days/
+    util.redistribute(data['AK']['data'], '2021-12-17', 56, 135, 'death')
+
+    # IA reports weekly, was off by 1 day
+    util.redistribute(data['IA']['data'], '2021-12-09', 105, 1, 'death')
+
     # KY has an unexplained death spike on a single day, so spread it out a bit
     util.redistribute(data['KY']['data'], '2021-12-06', 198-110, 4, 'death')
     # small adjustment for NH
