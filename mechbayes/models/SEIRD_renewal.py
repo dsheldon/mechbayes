@@ -168,7 +168,7 @@ class SEIRD(SEIRDBase):
         '''        
                 
         # Sample initial time series of exposed individuals and 
-        # initial (incidence) number of cases and deaths        
+        # initial (cumulative) number of cases and deaths        
         seed_length = 10;
         dE_init = numpyro.sample("dE_init", dist.Uniform(0, 1e-4*N*np.ones(seed_length)))
         I0 = numpyro.sample("I0", dist.Uniform(0, 1e-4*N))

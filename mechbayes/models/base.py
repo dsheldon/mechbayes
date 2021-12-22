@@ -121,8 +121,8 @@ class Model():
         predictive = Predictive(self, posterior_samples=self.mcmc_samples)
 
         args = dict(self.args, **args)
-        print("self.obs0")
-        print(self.obs0)
+        #print("self.obs0")
+        #print(self.obs0)
         return predictive(rng_key, **self.obs0, **args)
     
     
