@@ -94,8 +94,8 @@ def clean(data, forecast_date):
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
     # MD death and case data issues
-    data['MD']['data']['death'][forecast_date - pd.Timedelta("14d"):] = onp.nan
-    data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("14d"):] = onp.nan
+    # data['MD']['data']['death'][forecast_date - pd.Timedelta("14d"):] = onp.nan
+    # data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("14d"):] = onp.nan
 
 
 def make_manual_adjustments(data, forecast_date):
