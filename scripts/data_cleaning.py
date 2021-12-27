@@ -124,6 +124,9 @@ def clean(data, forecast_date):
     data['WV']['data']['confirmed'][forecast_date - pd.Timedelta("2d"):] = onp.nan
     # TN no report on 2021-12-24 - 2021-12-26
     data['TN']['data']['death'][forecast_date - pd.Timedelta("2d"):] = onp.nan
+    # US partially reported on 2021-12-25 - 2021-12-26
+    data['US']['data']['death'][forecast_date - pd.Timedelta("1d"):] = onp.nan
+
 
 
 
