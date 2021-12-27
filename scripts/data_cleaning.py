@@ -93,13 +93,57 @@ def clean(data, forecast_date):
     # OH death data is delayed, so recent weeks always appear as zeros. 
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
-    # MD death and case data issues
-    # data['MD']['data']['death'][forecast_date - pd.Timedelta("14d"):] = onp.nan
-    # data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("14d"):] = onp.nan
+    
+    # MD death data issues
+    data['MD']['data']['death'][forecast_date - pd.Timedelta("21d"):] = onp.nan
+
+    # Christmas partially-reported/missing values
+    # AZ 2021-12-26 partially reported
+    data['AZ']['data']['confirmed'][forecast_date - pd.Timedelta("0d"):] = onp.nan
+    # CA no report on 2021-12-25
+    data['CA']['data']['confirmed'][forecast_date - pd.Timedelta("1d")] = onp.nan
+    # HI no report on 2021-12-26
+    data['HI']['data']['confirmed'][forecast_date - pd.Timedelta("0d"):] = onp.nan
+    # KY no report on 2021-12-23 - 2021-12-26
+    data['KY']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
+    data['KY']['data']['death'][forecast_date - pd.Timedelta("3d"):] = onp.nan
+    # MA no report on 2021-12-25 - 2021-12-26
+    data['MA']['data']['confirmed'][forecast_date - pd.Timedelta("1d"):] = onp.nan
+    # CA no report on 2021-12-25
+    data['MO']['data']['confirmed'][forecast_date - pd.Timedelta("1d")] = onp.nan
+    # NY no report on 2021-12-25
+    data['NY']['data']['death'][forecast_date - pd.Timedelta("1d")] = onp.nan
+    # OH no report on 2021-12-25
+    data['OH']['data']['confirmed'][forecast_date - pd.Timedelta("1d")] = onp.nan
+    # TX partially reported and no report on 2021-12-24 - 2021-12-26
+    data['TX']['data']['confirmed'][forecast_date - pd.Timedelta("2d"):] = onp.nan
+    data['TX']['data']['death'][forecast_date - pd.Timedelta("2d"):] = onp.nan
+    # VT partially reported and no report on 2021-12-24 - 2021-12-26
+    data['VT']['data']['confirmed'][forecast_date - pd.Timedelta("2d"):] = onp.nan
+    # WV partially reported and no report on 2021-12-24 - 2021-12-26
+    data['WV']['data']['confirmed'][forecast_date - pd.Timedelta("2d"):] = onp.nan
+    # TN no report on 2021-12-24 - 2021-12-26
+    data['TN']['data']['death'][forecast_date - pd.Timedelta("2d"):] = onp.nan
+
 
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+    
+    # NEED UPDATE ON 2022-01-03
+    # https://github.com/CSSEGISandData/COVID-19/issues/5083
+    # move newly added 2100 deaths reported on 2021-12-23 to 2021-09-01
+    # after this command, 2021-12-23 has a corrected daily inc death of 72
+    data['TN']['data'].loc['2021-09-01':'2021-12-22','death'] += 2100
+    # redistrbute to summer
+    util.redistribute(data['TN']['data'], '2021-09-01', 2100, 90, 'death') 
+
+    util.redistribute(data['NY']['data'], '2021-12-26', 41175, 1, 'confirmed')
+    util.redistribute(data['MD']['data'], '2021-12-26', 16690, 2, 'confirmed')
+    
+    # AZ -1 on 2021-12-26
+    util.redistribute(data['AZ']['data'], '2021-12-26', -1, 1, 'death')
+
     util.redistribute(data['VT']['data'], '2021-11-29', 1681 - 300, 4, 'confirmed')
 
     util.redistribute(data['VI']['data'], '2021-12-14', 2218, -1, 'confirmed')
