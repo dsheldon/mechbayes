@@ -95,7 +95,8 @@ target2var = {'inc case' : 'dy',
 target2jhu = {'inc case' : 'confirmed',
               'cum case' : 'confirmed',
               'inc death' : 'death',
-              'cum death' : 'death'};
+              'cum death' : 'death',
+              'inc hosp': 'hospitalization'};
 
 def generate_forecast_df(forecast_date,
                          model,
@@ -109,6 +110,7 @@ def generate_forecast_df(forecast_date,
 
     forecast_start = forecast_date #+ pd.Timedelta("1d")
 
+    # Need to map dz to hosp
     variable_name = target2var[target];
     
     # empty forecast data structure
@@ -121,8 +123,6 @@ def generate_forecast_df(forecast_date,
                 'target_end_date': []}
 
     forecast["forecast_date"] = forecast_date
-    next_saturday = pd.Timedelta('6 days')
-
     has_missing_place = False
 
     for place in places:
@@ -135,18 +135,34 @@ def generate_forecast_df(forecast_date,
             continue
 
         jhu_variable = target2jhu[target]
-        truth_data = data[place]['data'][jhu_variable]        
+        truth_data = data[place]['data'][jhu_variable]       
+
+        if jhu_variable != "hospitalization" :
+            target_temoral_resolution = "wk"
+            # next saturday
+            next_horizon = pd.Timedelta('6 days')
+        else:
+            target_temoral_resolution = "day"
+            # next day
+            next_horizon = pd.Timedelta('1 day')
+
+
 
         forecast_samples = model.get(forecast_samples, variable_name, forecast=True)
         daily_df = util.construct_daily_df(forecast_start, forecast_samples, target, truth_data=truth_data, pad_strategy=pad_strategy)
         weekly_df = util.resample_to_weekly(daily_df, target)
 
+        # if jhu_variable == "hospitalization" :
+        # daily targets...
+        # else
+        # weekly targets...
+
         for week_ahead in range(1, num_weeks+1):
             target_week_start = forecast_date + pd.Timedelta(weeks=week_ahead-1)
             samples = weekly_df.loc[target_week_start]
-            target_end_date_datetime = pd.to_datetime(target_week_start) + next_saturday
+            target_end_date_datetime = pd.to_datetime(target_week_start) + next_horizon
             target_end_date = target_end_date_datetime.strftime("%Y-%m-%d")
-            week_ahead_target = f"{week_ahead:d} wk ahead {target}"
+            week_ahead_target = f"{week_ahead:d} {target_temoral_resolution} ahead {target}"
             
             for q in quantiles:
                 prediction = np.percentile(samples, q*100)
