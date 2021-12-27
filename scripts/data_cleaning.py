@@ -93,15 +93,20 @@ def clean(data, forecast_date):
     # Manual adjustment for OK after redistributing to weekly
     # util.redistribute(data['OK']['data'], '2021-10-20', 163 - 40, 365, 'death')
 
+    # OK death data delayed on 11/15/2021, so data for recent 11 days is 0 or NA
+    # data['OK']['data']['death'][forecast_date - pd.Timedelta("11d"):] = onp.nan
 
     # OH death data is delayed, so recent weeks always appear as zeros. 
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
-
+    # MD death and case data issues
+    data['MD']['data']['death'][forecast_date - pd.Timedelta("14d"):] = onp.nan
+    data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("14d"):] = onp.nan
 
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+
     #hospitalizations
     util.redistribute(data['WY']['data'], '2020-07-27', 45 - 10, 13, 'hospitalization')
 
@@ -135,6 +140,97 @@ def make_manual_adjustments(data, forecast_date):
     util.redistribute(data['AL']['data'], '2021-07-01', 281 - 50, 7*3, 'hospitalization')
     util.redistribute(data['CT']['data'], '2020-08-03', 48 - 15, 7*2, 'hospitalization')
     # end of hospitalization adjustments
+
+    util.redistribute(data['VT']['data'], '2021-11-29', 1681 - 300, 4, 'confirmed')
+
+    util.redistribute(data['VI']['data'], '2021-12-14', 2218, -1, 'confirmed')
+
+    # https://www.youtube.com/watch?v=AMtWWVwAbz4
+    # https://spectrumlocalnews.com/me/maine/news/2021/12/17/covid-hospitalizations-continue-at-high-level
+    util.redistribute(data['ME']['data'], '2021-12-16', 20, 38, 'death')
+    util.redistribute(data['ME']['data'], '2021-12-17', 19, 36, 'death')
+
+    # https://www.adn.com/alaska-news/2021/12/17/alaska-on-friday-reports-57-deaths-mostly-from-the-fall-and-408-virus-cases-over-past-2-days/
+    util.redistribute(data['AK']['data'], '2021-12-17', 56, 135, 'death')
+
+    # IA reports weekly, was off by 1 day
+    util.redistribute(data['IA']['data'], '2021-12-09', 105, 1, 'death')
+
+    # KY has an unexplained death spike on a single day, so spread it out a bit
+    util.redistribute(data['KY']['data'], '2021-12-06', 198-110, 4, 'death')
+    # small adjustment for NH
+    util.redistribute(data['NH']['data'], '2021-12-07', 6, 1, 'death')
+    # adjust WI's single-day death spike
+    util.redistribute(data['WI']['data'], '2021-12-08', 126-60, 2, 'death')
+    # MI adjustments for deaths added on multiple days
+    util.redistribute(data['MI']['data'], '2021-11-29', 50, 4, 'death')
+    util.redistribute(data['MI']['data'], '2021-12-01', 399-180, 2, 'death')
+    util.redistribute(data['MI']['data'], '2021-12-03', 310-170, 2, 'death')
+    util.redistribute(data['MI']['data'], '2021-12-08', 409-260, 2, 'death')
+    # MD case adjustments
+    util.redistribute(data['MD']['data'], '2021-11-27', 1200, 7, 'confirmed')
+    util.redistribute(data['MD']['data'], '2021-12-02', 450, 4, 'confirmed')
+    util.redistribute(data['MD']['data'], '2021-12-03', 650, 5, 'confirmed')
+    util.redistribute(data['MD']['data'], '2021-12-04', 700, 6, 'confirmed')
+
+    # FL reported two weeks worth of deaths in one week, manually readjusting this week
+    # trying to force the trend to continue downwards, but making hand-waving calculations 
+    util.redistribute(data['FL']['data'], '2021-12-03', 40, 13, 'death')
+    util.redistribute(data['FL']['data'], '2021-12-02', 43, 12, 'death')
+    util.redistribute(data['FL']['data'], '2021-12-01', 46, 11, 'death')
+    util.redistribute(data['FL']['data'], '2021-11-30', 49, 10, 'death')
+    util.redistribute(data['FL']['data'], '2021-11-29', 52, 9, 'death')
+    util.redistribute(data['FL']['data'], '2021-11-28', 55, 8, 'death')
+    util.redistribute(data['FL']['data'], '2021-11-27', 58, 7, 'death')
+
+    util.redistribute(data['FL']['data'], '2021-12-03', 1400, 13, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-12-02', 1500, 12, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-12-01', 1600, 11, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-11-30', 1700, 10, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-11-29', 1800, 9, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-11-28', 1900, 8, 'confirmed')
+    util.redistribute(data['FL']['data'], '2021-11-27', 2000, 7, 'confirmed')
+
+
+    # MD had one day of 30 deaths that may be triggering growth in death forecast
+    util.redistribute(data['MD']['data'], '2021-11-27', 30-12, 3, 'death')
+
+    # bulk report for MO on 2021-12-02, must be for a long time back!
+    # 20 deaths seems about right for daily deaths at this point
+    # computing the redistribution time as the difference between 2020-03-07 and 2021-12-02
+    util.redistribute(data['MO']['data'], '2021-12-02', 2441-20, 634, 'death')
+
+    # "mini-bulk" report for OK on 11-12: https://github.com/CSSEGISandData/COVID-19/issues/4906
+    # i think some of this should be put in just the previous week, and some needs to be
+    # distributed further back...?
+    util.redistribute(data['OK']['data'], '2021-11-12', 250, 8, 'death')
+    util.redistribute(data['OK']['data'], '2021-11-12', 300, 28, 'death')
+
+    # https://github.com/CSSEGISandData/COVID-19/issues/4930
+    # per email from CSSE, ">6300" cases from full pandemic bulk reported
+    # I'm making it 9000 to better match neighboring data
+    util.redistribute(data['MO']['data'], '2021-11-18', 9000, 657, 'confirmed')
+
+    # https://chfs.ky.gov/agencies/dph/covid19/COVID19DailyReport.pdf
+    # 84 deaths reported on 2021-11-19 were from earlier
+    util.redistribute(data['KY']['data'], '2021-11-19', 84, 365, 'death')
+
+    # spread large case count for PA over the previous 5 months, leave 6000 cases
+    util.redistribute(data['PA']['data'], '2021-11-13', 20320-6000, 150, 'confirmed')
+   
+    # spread cases across the previous 2 days that had 0
+    util.redistribute(data['MN']['data'], '2021-11-01', 10434-7000, 2, 'confirmed')
+    # https://content.govdelivery.com/accounts/ORDHS/bulletins/2f8912c
+    util.redistribute(data['OR']['data'], '2021-11-02', 45-27, 4, 'death')
+    util.redistribute(data['OR']['data'], '2021-11-03', 71-27, 4, 'death')
+    util.redistribute(data['OR']['data'], '2021-11-04', 74-33, 6, 'death')
+    util.redistribute(data['OR']['data'], '2021-11-04', 5, -1, 'death')
+    # NH reporting issue
+    util.redistribute(data['NH']['data'], '2021-10-28', 781-730, 1, 'confirmed')
+    util.redistribute(data['NH']['data'], '2021-11-01', 3834-760, 4, 'confirmed')
+    util.redistribute(data['NH']['data'], '2021-11-01', 500, -1, 'confirmed')
+    util.redistribute(data['NH']['data'], '2021-11-02', 120, -1, 'confirmed')
+    util.redistribute(data['NH']['data'], '2021-11-01', 24-6, 4, 'death')
     
     # https://www.wvtm13.com/article/alabama-health-department-covid-case-backlog-reporting/38080933#
     # there was some mention of "previous months" in article above, so choosing 90
