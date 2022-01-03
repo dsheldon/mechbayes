@@ -94,7 +94,8 @@ def clean(data, forecast_date):
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
 
-    # MD death data issues
+    # MD case/death data issues
+    data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("18d"):] = onp.nan
     # data['MD']['data']['death'][forecast_date - pd.Timedelta("21d"):] = onp.nan
 
     # KY reporting around new year's
@@ -113,6 +114,7 @@ def make_manual_adjustments(data, forecast_date):
     util.redistribute(data['PR']['data'], '2022-01-02', 9969, 1, 'confirmed')
     util.redistribute(data['PR']['data'], '2021-12-25', 8627, 1, 'confirmed')
 
+    # ALL OF THESE FIXES ARE QUESTIONABLE - I gave up and set them to NA above
     util.redistribute(data['MD']['data'], '2022-01-02', 24430, 2, 'confirmed')
     util.redistribute(data['MD']['data'], '2021-12-28', 391, 23, 'death')
     util.redistribute(data['MD']['data'], '2022-01-02', 74, 2, 'death')
@@ -120,7 +122,6 @@ def make_manual_adjustments(data, forecast_date):
     util.redistribute(data['KY']['data'], '2021-12-27', 7800, 4, 'confirmed')
     util.redistribute(data['KY']['data'], '2021-12-27', 126, 4, 'death')
 
-    # NEED UPDATE ON 2022-01-03
     # https://github.com/CSSEGISandData/COVID-19/issues/5083
     # move newly added 2100 deaths reported on 2021-12-23 to 2021-09-01
     # after this command, 2021-12-23 has a corrected daily inc death of 72
