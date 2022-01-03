@@ -74,7 +74,7 @@ def clean(data, forecast_date):
     #
     util.smooth_to_weekly(data, forecast_date, 'IA', 'confirmed', '2021-07-21')
     util.smooth_to_weekly(data, forecast_date, 'IA', 'death',     '2021-07-21')
-    
+
     util.smooth_to_weekly(data, forecast_date, 'SD', 'confirmed', '2021-07-14')
     util.smooth_to_weekly(data, forecast_date, 'SD', 'death',     '2021-07-14')
 
@@ -93,23 +93,40 @@ def clean(data, forecast_date):
     # OH death data is delayed, so recent weeks always appear as zeros. 
     # Set trailing two weeks to missing
     data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
-    
+
     # MD death data issues
     # data['MD']['data']['death'][forecast_date - pd.Timedelta("21d"):] = onp.nan
+
+    # KY reporting around new year's
+    data['KY']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
+    data['KY']['data']['death'][forecast_date - pd.Timedelta("3d"):] = onp.nan
 
 
 
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
-    
+    util.redistribute(data['TN']['data'], '2021-12-27', 169, 3, 'death')
+    util.redistribute(data['TN']['data'], '2021-12-28', 56, 4, 'death')
+    util.redistribute(data['TN']['data'], '2021-12-30', 33, -1, 'death') # -3 reported for 12-31
+
+    util.redistribute(data['PR']['data'], '2022-01-02', 9969, 1, 'confirmed')
+    util.redistribute(data['PR']['data'], '2021-12-25', 8627, 1, 'confirmed')
+
+    util.redistribute(data['MD']['data'], '2022-01-02', 24430, 2, 'confirmed')
+    util.redistribute(data['MD']['data'], '2021-12-28', 391, 23, 'death')
+    util.redistribute(data['MD']['data'], '2022-01-02', 74, 2, 'death')
+
+    util.redistribute(data['KY']['data'], '2021-12-27', 7800, 4, 'confirmed')
+    util.redistribute(data['KY']['data'], '2021-12-27', 126, 4, 'death')
+
     # NEED UPDATE ON 2022-01-03
     # https://github.com/CSSEGISandData/COVID-19/issues/5083
     # move newly added 2100 deaths reported on 2021-12-23 to 2021-09-01
     # after this command, 2021-12-23 has a corrected daily inc death of 72
-    # data['TN']['data'].loc['2021-09-01':'2021-12-22','death'] += 2100
+    data['TN']['data'].loc['2021-09-01':'2021-12-22','death'] += 2100
     # redistrbute to summer
-    # util.redistribute(data['TN']['data'], '2021-09-01', 2100, 90, 'death') 
+    util.redistribute(data['TN']['data'], '2021-09-01', 2100, 180, 'death') 
 
     util.redistribute(data['NY']['data'], '2021-12-26', 41175, 1, 'confirmed')
     util.redistribute(data['MD']['data'], '2021-12-26', 16690, 2, 'confirmed')
