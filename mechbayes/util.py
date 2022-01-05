@@ -308,8 +308,8 @@ def run_place(data,
     numpyro.enable_x64()
 
     print(f"Running {place} (start={start}, end={end})")
-    print("start" + start)
-    print("end" + end)
+    print("start" + str(start))
+    print("end" + str(end))
     place_data = data[place]['data'][start:end]
     
     # plug in hosp data as death data
