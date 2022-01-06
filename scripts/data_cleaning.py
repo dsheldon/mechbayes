@@ -166,7 +166,8 @@ def make_manual_adjustments(data, forecast_date):
     # https://github.com/CSSEGISandData/COVID-19/issues/5083
     # move newly added 2100 deaths reported on 2021-12-23 to 2021-09-01
     # after this command, 2021-12-23 has a corrected daily inc death of 72
-    data['TN']['data'].loc['2021-09-01':'2021-12-22','death'] += 2100
+    data['TN']['data'].loc['2021-09-01','death'] += 2100
+    data['TN']['data'].loc['2021-12-23','death'] -= 2100
     # redistrbute to summer
     util.redistribute(data['TN']['data'], '2021-09-01', 2100, 180, 'death') 
 
