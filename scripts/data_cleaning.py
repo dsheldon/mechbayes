@@ -148,6 +148,22 @@ def make_manual_adjustments(data, forecast_date):
     util.redistribute(data['CT']['data'], '2020-08-03', 48 - 15, 7*2, 'hospitalization')
     # end of hospitalization adjustments
 
+    util.redistribute(data['WA']['data'], '2022-01-03', 33069-10000, 3, 'confirmed')
+    util.redistribute(data['WA']['data'], '2021-12-27', 20494-5000, 3, 'confirmed')
+
+    util.redistribute(data['TX']['data'], '2022-01-03', 162871-50000, 21, 'confirmed')
+
+    util.redistribute(data['VA']['data'], '2021-12-28', 185-45, 30, 'death')
+
+    util.redistribute(data['UT']['data'], '2022-01-05', 44-25, 7, 'death')
+
+    util.redistribute(data['NE']['data'], '2022-01-06', 72-30, 7, 'death')
+
+    util.redistribute(data['KY']['data'], '2022-01-03', 80, 4, 'death')
+
+    util.redistribute(data['DE']['data'], '2022-01-07', 44-9, 7, 'death')
+    util.redistribute(data['DE']['data'], '2022-01-08', 35-14, 7, 'death')
+
     util.redistribute(data['TN']['data'], '2021-12-27', 169, 3, 'death')
     util.redistribute(data['TN']['data'], '2021-12-28', 56, 4, 'death')
     util.redistribute(data['TN']['data'], '2021-12-30', 33, -1, 'death') # -3 reported for 12-31
