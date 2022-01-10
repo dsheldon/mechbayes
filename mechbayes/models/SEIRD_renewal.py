@@ -213,18 +213,16 @@ class SEIRD(SEIRDBase):
         death_rate = numpyro.sample("death_rate", 
                                     dist.Gamma(death_rate_shape, death_rate_shape * H_duration_est))
 
-
-        # Split observations into first and rest
-        if confirmed is None:
-            confirmed0, confirmed = (None, None)
-        else:
-            confirmed0 = confirmed0  # this is incidence number of cases by start date
+        if confirmed is not None:
             confirmed = clean_daily_obs(confirmed)
-        if death is None:
-            death0, death = (None, None)
-        else: 
-            death0 = death0
+
+        if death is not None:
             death = clean_daily_obs(death)
+
+        # I believe these are always supplied now
+        assert confirmed0 is not None
+        assert death0 is not None
+
         params = (beta0, 
                   sigma, 
                   gamma, 

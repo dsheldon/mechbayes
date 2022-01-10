@@ -199,7 +199,7 @@
 			             " -- submit renewal model",
 			             " -- use renewal_14 as backup"],
             "region": "US_and_states_sorted",
-            "start" : "2021-01-10",
+            "start" : "2020-03-04",
             "model_configs" : ["renewal", "renewal_14"],
             "submission" : true,
             "submission_args": {

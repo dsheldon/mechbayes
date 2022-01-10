@@ -308,8 +308,8 @@ def run_place(data,
     numpyro.enable_x64()
 
     print(f"Running {place} (start={start}, end={end})")
-    print("start" + start)
-    print("end" + end)
+    print("start" + str(start))
+    print("end" + str(end))
     place_data = data[place]['data'][start:end]
     
     # plug in hosp data as death data
@@ -615,17 +615,17 @@ def score_place(forecast_date,
     # Get observed values for forecast period
     if target.startswith('cum'):
         start = forecast_date + pd.Timedelta("1d")
-        obs = data[place]['data'][obs_field][start:]
+        obs = onp.cumsum(data[place]['data'][obs_field])[start:]
 
     elif target.startswith('inc') and forecast_date.dayofweek==6:
         # For incident forecasts made on Sunday, also get the Sunday
         # truth data, because we will pad forecasts to include Sunday
         start = forecast_date
-        obs = data[place]['data'][obs_field].diff()[start:] # incident 
+        obs = data[place]['data'][obs_field][start:] # incident 
 
     elif target.startswitch('inc'):
         start = forecast_date + pd.Timedelta("1d")
-        obs = data[place]['data'][obs_field].diff()[start:] # incident 
+        obs = data[place]['data'][obs_field][start:] # incident 
     
     else:
         raise ValueErorr(f"bad target {target}")
