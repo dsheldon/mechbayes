@@ -615,17 +615,17 @@ def score_place(forecast_date,
     # Get observed values for forecast period
     if target.startswith('cum'):
         start = forecast_date + pd.Timedelta("1d")
-        obs = data[place]['data'][obs_field][start:]
+        obs = onp.cumsum(data[place]['data'][obs_field])[start:]
 
     elif target.startswith('inc') and forecast_date.dayofweek==6:
         # For incident forecasts made on Sunday, also get the Sunday
         # truth data, because we will pad forecasts to include Sunday
         start = forecast_date
-        obs = data[place]['data'][obs_field].diff()[start:] # incident 
+        obs = data[place]['data'][obs_field][start:] # incident 
 
     elif target.startswitch('inc'):
         start = forecast_date + pd.Timedelta("1d")
-        obs = data[place]['data'][obs_field].diff()[start:] # incident 
+        obs = data[place]['data'][obs_field][start:] # incident 
     
     else:
         raise ValueErorr(f"bad target {target}")
