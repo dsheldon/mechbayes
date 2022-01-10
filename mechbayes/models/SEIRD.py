@@ -103,18 +103,15 @@ class SEIRD(SEIRDBase):
         x0 = SEIRDModel.seed(N=N, I=I0, E=E0, H=H0, D=D0)
         numpyro.deterministic("x0", x0)
 
-        # Split observations into first and rest
-        if confirmed is None:
-            confirmed0, confirmed = (None, None)
-        else:
-            confirmed0 = confirmed0
+        if confirmed is not None:
             confirmed = clean_daily_obs(confirmed)
-            
-        if death is None:
-            death0, death = (None, None)
-        else: 
-            death0 = death0
+
+        if death is not None:
             death = clean_daily_obs(death)
+
+        # I believe these are always supplied now
+        assert confirmed0 is not None
+        assert death0 is not None
 
         # First observation
         with numpyro.handlers.scale(scale=0.5):
