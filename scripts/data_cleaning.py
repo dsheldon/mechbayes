@@ -107,6 +107,9 @@ def clean(data, forecast_date):
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+    util.redistribute(data['WA']['data'], '2022-01-03', 33069-10000, 3, 'confirmed')
+    util.redistribute(data['WA']['data'], '2021-12-27', 20494-5000, 3, 'confirmed')
+
     util.redistribute(data['TX']['data'], '2022-01-03', 162871-50000, 21, 'confirmed')
 
     util.redistribute(data['VA']['data'], '2021-12-28', 185-45, 30, 'death')
