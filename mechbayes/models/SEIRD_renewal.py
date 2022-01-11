@@ -158,6 +158,8 @@ class SEIRD(SEIRDBase):
                  forecast_rw_scale = 0.,
                  num_frozen=0,
                  rw_use_last=1,
+                 confirmed0=None,
+                 death0=None,
                  confirmed=None,
                  death=None):
 
@@ -211,20 +213,16 @@ class SEIRD(SEIRDBase):
         death_rate = numpyro.sample("death_rate", 
                                     dist.Gamma(death_rate_shape, death_rate_shape * H_duration_est))
 
+        if confirmed is not None:
+            confirmed = clean_daily_obs(confirmed)
 
-        # Split observations into first and rest
-        if confirmed is None:
-            confirmed0, confirmed = (None, None)
-        else:
-            confirmed0 = confirmed[0]  # this is cumulative number of cases by start date
-            confirmed = clean_daily_obs(onp.diff(confirmed))
-            
-        if death is None:
-            death0, death = (None, None)
-        else: 
-            death0 = death[0]
-            death = clean_daily_obs(onp.diff(death))
-        
+        if death is not None:
+            death = clean_daily_obs(death)
+
+        # I believe these are always supplied now
+        assert confirmed0 is not None
+        assert death0 is not None
+
         params = (beta0, 
                   sigma, 
                   gamma, 
@@ -242,7 +240,7 @@ class SEIRD(SEIRDBase):
         dy0 = observe_nb2("dy0", I0, det_prob0, confirmed_dispersion, obs=confirmed0)
         dz0 = observe_nb2("dz0", D0, det_prob_d, death_dispersion, obs=death0)
                
-        beta, det_prob, dE, dI, dD, dy, dz = self.dynamics(T-1, 
+        beta, det_prob, dE, dI, dD, dy, dz = self.dynamics(T, 
                                                            params, 
                                                            dE_init,
                                                            N,

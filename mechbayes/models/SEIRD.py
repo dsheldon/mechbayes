@@ -42,6 +42,8 @@ class SEIRD(SEIRDBase):
                  forecast_rw_scale = 0.,
                  num_frozen=0,
                  rw_use_last=1,
+                 confirmed0=None,
+                 death0=None,
                  confirmed=None,
                  death=None):
 
@@ -101,19 +103,16 @@ class SEIRD(SEIRDBase):
         x0 = SEIRDModel.seed(N=N, I=I0, E=E0, H=H0, D=D0)
         numpyro.deterministic("x0", x0)
 
-        # Split observations into first and rest
-        if confirmed is None:
-            confirmed0, confirmed = (None, None)
-        else:
-            confirmed0 = confirmed[0]
-            confirmed = clean_daily_obs(onp.diff(confirmed))
-            
-        if death is None:
-            death0, death = (None, None)
-        else: 
-            death0 = death[0]
-            death = clean_daily_obs(onp.diff(death))
-        
+        if confirmed is not None:
+            confirmed = clean_daily_obs(confirmed)
+
+        if death is not None:
+            death = clean_daily_obs(death)
+
+        # I believe these are always supplied now
+        assert confirmed0 is not None
+        assert death0 is not None
+
         # First observation
         with numpyro.handlers.scale(scale=0.5):
             y0 = observe_nb2("dy0", x0[6], det_prob0, confirmed_dispersion, obs=confirmed0)

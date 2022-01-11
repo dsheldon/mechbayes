@@ -51,13 +51,19 @@ def clean(data, forecast_date):
     
     '''Adjustments for weekly reporting irregularities. Don't need to update each week'''
     
-    # Set weekends to missing
+    # Set weekends to missing for cases data
     util.set_trailing_weekend_zeros_to_missing(data,
+                                               'confirmed',
                                                forecast_date, 
                                                NO_SUNDAY_DATA, 
                                                NO_WEEKEND_DATA)
-
-
+    
+    # Set weekends to missing for death data
+    util.set_trailing_weekend_zeros_to_missing(data,
+                                               'death',
+                                               forecast_date, 
+                                               NO_SUNDAY_DATA, 
+                                               NO_WEEKEND_DATA)
 
     # Make manual adjustments
     make_manual_adjustments(data, forecast_date)
@@ -107,6 +113,41 @@ def clean(data, forecast_date):
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+
+    #hospitalizations
+    util.redistribute(data['WY']['data'], '2020-07-27', 45 - 10, 13, 'hospitalization')
+
+    #util.redistribute(data['NY']['data'], '2020-09-27', 227 - 140, 7*2, 'hospitalization')
+    util.redistribute(data['NY']['data'], '2020-08-21', 455 - 85, 40, 'hospitalization')
+
+    util.redistribute(data['NM']['data'], '2020-11-10', 206 - 110, 10, 'hospitalization')
+    util.redistribute(data['NH']['data'], '2020-08-24', 93 - 40, 24, 'hospitalization')
+
+    util.redistribute(data['NC']['data'], '2020-08-30', 643 - 160, 7*5, 'hospitalization')
+    util.redistribute(data['NC']['data'], '2020-08-29', 504 - 150, 7*5, 'hospitalization')
+    util.redistribute(data['NC']['data'], '2020-08-28', 492 - 160, 7*5, 'hospitalization')
+    util.redistribute(data['NC']['data'], '2020-08-27', 692 - 160, 7*5, 'hospitalization')
+
+    util.redistribute(data['MS']['data'], '2020-08-13', 179 - 140, 7*2, 'hospitalization')
+
+    util.redistribute(data['MI']['data'], '2020-07-31', 952 - 90, 30, 'hospitalization')
+    util.redistribute(data['MI']['data'], '2020-07-30', 980 - 90, 29, 'hospitalization')
+
+    util.redistribute(data['KY']['data'], '2020-10-05', 621 - 210, 7*5, 'hospitalization')
+    util.redistribute(data['KY']['data'], '2020-10-04', 612 - 200, 7*5, 'hospitalization')
+
+
+    util.redistribute(data['GA']['data'], '2020-09-12', 743 - 250, 7*5, 'hospitalization')
+    util.redistribute(data['GA']['data'], '2020-09-11', 732 - 240, 7*5, 'hospitalization')
+    util.redistribute(data['GA']['data'], '2020-09-10', 768 - 230, 7*5, 'hospitalization')
+    util.redistribute(data['GA']['data'], '2020-09-09', 763 - 230, 7*5, 'hospitalization')
+    util.redistribute(data['GA']['data'], '2020-09-08', 791 - 230, 7*5, 'hospitalization')
+
+    util.redistribute(data['GA']['data'], '2020-08-16', 878 - 330, 7*5, 'hospitalization')
+    util.redistribute(data['AL']['data'], '2021-07-01', 281 - 50, 7*3, 'hospitalization')
+    util.redistribute(data['CT']['data'], '2020-08-03', 48 - 15, 7*2, 'hospitalization')
+    # end of hospitalization adjustments
+
     util.redistribute(data['WA']['data'], '2022-01-03', 33069-10000, 3, 'confirmed')
     util.redistribute(data['WA']['data'], '2021-12-27', 20494-5000, 3, 'confirmed')
 
@@ -122,7 +163,6 @@ def make_manual_adjustments(data, forecast_date):
 
     util.redistribute(data['DE']['data'], '2022-01-07', 44-9, 7, 'death')
     util.redistribute(data['DE']['data'], '2022-01-08', 35-14, 7, 'death')
-
 
     util.redistribute(data['TN']['data'], '2021-12-27', 169, 3, 'death')
     util.redistribute(data['TN']['data'], '2021-12-28', 56, 4, 'death')
@@ -142,7 +182,8 @@ def make_manual_adjustments(data, forecast_date):
     # https://github.com/CSSEGISandData/COVID-19/issues/5083
     # move newly added 2100 deaths reported on 2021-12-23 to 2021-09-01
     # after this command, 2021-12-23 has a corrected daily inc death of 72
-    data['TN']['data'].loc['2021-09-01':'2021-12-22','death'] += 2100
+    data['TN']['data'].loc['2021-09-01','death'] += 2100
+    data['TN']['data'].loc['2021-12-23','death'] -= 2100
     # redistrbute to summer
     util.redistribute(data['TN']['data'], '2021-09-01', 2100, 180, 'death') 
 
@@ -253,7 +294,7 @@ def make_manual_adjustments(data, forecast_date):
     ## decided to set recent daily death to something like the moving average (5)
     ## and redistribute the days over the last 100 days (the delta period?)
     util.redistribute(data['NE']['data'], '2021-10-27', 481 - 5, 100, 'death')
-    
+
     util.redistribute(data['OK']['data'], '2021-10-20', 1138 - 200, 365, 'death')
 
     util.redistribute(data['AK']['data'], '2021-10-19', 66-26, 7, 'death')
@@ -422,7 +463,7 @@ def make_manual_adjustments(data, forecast_date):
     util.redistribute(data['IA']['data'], '2021-04-30', 16, 5, 'death')
 
     # fix weird jump then drop on 4-30 and 5-01 (fixed in JHU data as of May 09)
-    # util.redistribute(data['CA']['data'], '2021-05-01', -312, 1, 'death')
+    #util.redistribute(data['CA']['data'], '2021-05-01', -312, 1, 'death')
 
     # https://www.nytimes.com/interactive/2021/us/tennessee-covid-cases.html
     util.redistribute(data['TN']['data'], '2021-04-19', 2000, 90, 'confirmed')
@@ -644,7 +685,6 @@ def make_manual_adjustments(data, forecast_date):
     # https://health.hawaii.gov/news/covid-19/hawaii-covid-19-daily-news-digest-january-26-2021/
     util.redistribute(data['HI']['data'], '2021-01-26', 59, 90, 'death')
 
-
     util.redistribute(data['MT']['data'], '2021-01-23', 30, 60, 'death')
 
     # https://content.govdelivery.com/accounts/AKDHSS/bulletins/2bb208d
@@ -667,7 +707,7 @@ def make_manual_adjustments(data, forecast_date):
     # https://www.wabi.tv/2021/01/08/maine-sees-deadliest-day-of-pandemic-with-41-deaths-789-new-cases/
     util.redistribute(data['ME']['data'], '2021-01-08', 35, 40, 'death')
 
-
+    
     # The WA saga....
     util.redistribute(data['WA']['data'], '2021-02-08', 20, 60, 'death')
     util.redistribute(data['WA']['data'], '2021-02-09', 20, 60, 'death')
@@ -742,7 +782,13 @@ def make_manual_adjustments(data, forecast_date):
     #
     # https://twitter.com/natalie_krebs?lang=en
     # https://www.iowapublicradio.org/health/2020-12-08/iowa-officials-announce-change-in-methodology-that-raises-covid-19-death-count-by-175
-    data['IA']['data'].loc['2020-12-7':'2020-12-12','death'] = [2919, 3021, 3120, 3197, 3212, 3213]
+    
+    # This particular case is adjusted by line 631 instead because input data are incident counts now. 
+    # data['IA']['data'].loc['2020-12-7':'2020-12-12','death'] = [2919, 3021, 3120, 3197, 3212, 3213]
+   
+    # This list of new incident value is calculated as [2919-2717, onp.diff[list of cumulative values above]]
+    # 2919 is cumulative value on 2020-12-06 (as of 2021 October)
+    data['IA']['data'].loc['2020-12-7':'2020-12-12','death'] = [202, 102,  99,  77,  15,   1]
     util.redistribute(data['IA']['data'], '2020-12-07', 175, 60, 'death')
 
     # AL antigen backlogs in December
@@ -760,7 +806,7 @@ def make_manual_adjustments(data, forecast_date):
 
     # GA backlog on Nov 3 (JHU CSSE)
     util.redistribute(data['GA']['data'], '2020-11-03', 29937, 60, 'confirmed')
-    util.redistribute(data['GA']['data'], '2020-11-03', 450, 60, 'death')
+    #util.redistribute(data['GA']['data'], '2020-11-03', 450, 60, 'death')
 
 
     # Backlogs from LA county on 10/22, 10/23, 10/24
@@ -870,3 +916,5 @@ def make_manual_adjustments(data, forecast_date):
 
     # Correct values 9/15 through 9/20 are: 91,304 92,712 94,746 97,279 99,562 101,227 (source: https://www.dhs.wisconsin.gov/covid-19/cases.htm)
     # data['WI']['data'].loc['2020-09-15':'2020-09-20', 'confirmed'] = [91304, 92712, 94746, 97279, 99562, 101227]
+
+

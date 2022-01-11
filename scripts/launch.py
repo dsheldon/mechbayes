@@ -95,7 +95,6 @@ if __name__ == "__main__":
         raise ValueError("Must specify forecast_group or start")
     
     # Get forecast dates
-    start = args.start
     if args.num_sundays:
         today = pd.to_datetime("today").strftime('%Y-%m-%d')
         forecast_dates = list(pd.date_range(periods=args.num_sundays, end=today, freq='W').astype(str))

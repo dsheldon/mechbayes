@@ -117,22 +117,23 @@ def redistribute(df, date, n, k, col='death'):
     
     if k > 0:
         new_incident = onp.concatenate([new_incident, [-n]])
-        new_cumulative = onp.cumsum(new_incident)    
+        #new_cumulative = onp.cumsum(new_incident)    
         end = date 
         start = date - pd.Timedelta('1d') * ndays
     else:
         new_incident = onp.concatenate([[-n], new_incident])
-        new_cumulative = onp.cumsum(new_incident)    
+        #new_cumulative = onp.cumsum(new_incident)    
         start = date
         end = date + pd.Timedelta('1d') * ndays
     
     days = pd.date_range(start=start, end=end)
     #days = pd.date_range(end=date-pd.Timedelta('1d'), periods=k-1)
     
-    df.loc[days, col] += new_cumulative
+    df.loc[days, col] += new_incident
 
 
 def set_trailing_weekend_zeros_to_missing(data,
+                                          col,
                                           forecast_date,
                                           no_sunday_data_places,
                                           no_weekend_data_places):
@@ -176,16 +177,16 @@ def set_trailing_weekend_zeros_to_missing(data,
         saturday = forecast_date - pd.Timedelta('1d')
 
         for place in no_sunday_data_places + no_weekend_data_places:
-            data[place]['data'].loc[sunday, :] = onp.nan
+            data[place]['data'].loc[sunday, col] = onp.nan
 
         for place in no_weekend_data_places:
-            data[place]['data'].loc[saturday, :] = onp.nan
+            data[place]['data'].loc[saturday, col] = onp.nan
 
     elif forecast_date.dayofweek == 5: # forecast on saturday
 
         saturday = forecast_date
         for place in no_weekend_data_places:
-            data[place]['data'].loc[saturday, :] = onp.nan
+            data[place]['data'].loc[saturday, col] = onp.nan
 
 
 def smooth_to_weekly(data, forecast_date, place, var, start_date, end_date=None):
@@ -201,8 +202,9 @@ def smooth_to_weekly(data, forecast_date, place, var, start_date, end_date=None)
         # get total cases/deaths for week
         right = reporting_date
         left = reporting_date - pd.Timedelta("1w")
-        cum_tot = series[right]
-        weekly_tot = series[right] - series[left]
+        cum_sum_series = onp.cumsum(series)
+        cum_tot = cum_sum_series[right]
+        weekly_tot = cum_sum_series[right] - cum_sum_series[left]
         
         # construct incident time series with cases/deaths
         # spread evenly through week
@@ -216,11 +218,13 @@ def smooth_to_weekly(data, forecast_date, place, var, start_date, end_date=None)
         scrambled_days = [3, 0, 6, 2, 5, 4, 1]
         incident[scrambled_days[:rem]] += 1   
         
-        # now reconstruct cumulative series from incident
-        series[left+pd.Timedelta("1d"):right] = series[left] + onp.cumsum(incident)        
+        # now reconstruct incident series 
+        series[left+pd.Timedelta("1d"):right] = incident  
+
+        cum_sum_series = onp.cumsum(series)      
         
-        assert(series[right] - series[left] == weekly_tot)
-        assert(series[right] == cum_tot)
+        assert(cum_sum_series[right] - cum_sum_series[left] == weekly_tot)
+        assert(cum_sum_series[right] == cum_tot)
     
     # if we didn't explicitly stop smoothing (e.g., because location
     # went back to daily reporting), assume all observations after
@@ -283,6 +287,7 @@ Running
 
 def run_place(data, 
               place, 
+              use_hosp_as_death = False,
               model_type=mechbayes.models.SEIRD.SEIRD,
               start = '2020-03-04',
               end = None,
@@ -303,13 +308,26 @@ def run_place(data,
     numpyro.enable_x64()
 
     print(f"Running {place} (start={start}, end={end})")
+    print("start" + str(start))
+    print("end" + str(end))
     place_data = data[place]['data'][start:end]
+    
+    # plug in hosp data as death data
+    if use_hosp_as_death:
+        place_data["death"] = place_data["hospitalization"]
+
     T = len(place_data)
 
+    data0 = onp.cumsum(data[place]['data'][:start])
+    death0 =  data0["death"][-1]
+    confirmed0 = data0["confirmed"][-1]
+    
     model = model_type(
         data = place_data,
         T = T,
         N = data[place]['pop'],
+        death0 = death0,
+        confirmed0 = confirmed0,
         **kwargs
     )
     
@@ -406,6 +424,7 @@ def load_samples(filename):
 
 def gen_forecasts(data, 
                   place, 
+                  use_hosp_as_death = False,
                   model_type=mechbayes.models.SEIRD.SEIRD,
                   start = '2020-03-04', 
                   end=None,
@@ -423,7 +442,10 @@ def gen_forecasts(data,
     model = model_type()
 
     confirmed = data[place]['data'].confirmed[start:end]
-    death = data[place]['data'].death[start:end]
+    if use_hosp_as_death:
+        death = data[place]['data'].hospitalization[start:end]
+    else:
+        death = data[place]['data'].death[start:end]
 
     T = len(confirmed)
     N = data[place]['pop']
@@ -439,10 +461,10 @@ def gen_forecasts(data,
 
                 if daily:
                     variables = ['dy', 'dz']
-                    observations = [confirmed.diff(), death.diff()]
+                    observations = [confirmed, death]
                 else:
                     variables = ['y', 'z']
-                    observations= [confirmed, death]
+                    observations= [confirmed.cumsum(), death.cumsum()]
 
                 for variable, obs, ax in zip(variables, observations, axes):
                     model.plot_forecast(variable,
@@ -593,17 +615,17 @@ def score_place(forecast_date,
     # Get observed values for forecast period
     if target.startswith('cum'):
         start = forecast_date + pd.Timedelta("1d")
-        obs = data[place]['data'][obs_field][start:]
+        obs = onp.cumsum(data[place]['data'][obs_field])[start:]
 
     elif target.startswith('inc') and forecast_date.dayofweek==6:
         # For incident forecasts made on Sunday, also get the Sunday
         # truth data, because we will pad forecasts to include Sunday
         start = forecast_date
-        obs = data[place]['data'][obs_field].diff()[start:] # incident 
+        obs = data[place]['data'][obs_field][start:] # incident 
 
     elif target.startswitch('inc'):
         start = forecast_date + pd.Timedelta("1d")
-        obs = data[place]['data'][obs_field].diff()[start:] # incident 
+        obs = data[place]['data'][obs_field][start:] # incident 
     
     else:
         raise ValueErorr(f"bad target {target}")

@@ -122,7 +122,6 @@ def generate_forecast_df(forecast_date,
 
     forecast["forecast_date"] = forecast_date
     next_saturday = pd.Timedelta('6 days')
-
     has_missing_place = False
 
     for place in places:
@@ -135,7 +134,7 @@ def generate_forecast_df(forecast_date,
             continue
 
         jhu_variable = target2jhu[target]
-        truth_data = data[place]['data'][jhu_variable]        
+        truth_data = data[place]['data'][jhu_variable]       
 
         forecast_samples = model.get(forecast_samples, variable_name, forecast=True)
         daily_df = util.construct_daily_df(forecast_start, forecast_samples, target, truth_data=truth_data, pad_strategy=pad_strategy)

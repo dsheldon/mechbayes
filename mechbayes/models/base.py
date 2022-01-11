@@ -46,9 +46,11 @@ class Model():
     }
             
     
-    def __init__(self, data=None, mcmc_samples=None, **args):
+    def __init__(self, data=None, confirmed0=None, death0=None,mcmc_samples=None, **args):
         self.mcmc_samples = mcmc_samples
         self.data = data
+        self.confirmed0 = confirmed0
+        self.death0 = death0
         self.args = args
 
         
@@ -59,6 +61,15 @@ class Model():
         Used during inference and forecasting
         '''
         return {}
+
+    @property
+    def obs0(self):
+        '''Provide extra arguments for observations
+        
+        Used during inference and forecasting
+        '''
+        return {}
+    
     
 
     """
@@ -110,7 +121,9 @@ class Model():
         predictive = Predictive(self, posterior_samples=self.mcmc_samples)
 
         args = dict(self.args, **args)
-        return predictive(rng_key, **args)
+        #print("self.obs0")
+        #print(self.obs0)
+        return predictive(rng_key, **self.obs0, **args)
     
     
     def forecast(self, num_samples=1000, rng_key=PRNGKey(4), **args):
@@ -327,7 +340,23 @@ class SEIRDBase(Model):
 
         return {
             'confirmed': self.data['confirmed'].values,
-            'death': self.data['death'].values
+            'death': self.data['death'].values,
+            'confirmed0':self.confirmed0,
+            'death0':self.death0
+           }
+
+    @property
+    def obs0(self):
+        '''Provide extra arguments for observations
+        
+        Used during inference and forecasting
+        '''        
+        if self.confirmed0 is None and self.death0 is None:
+            return {}
+
+        return {
+            'confirmed0':self.confirmed0,
+            'death0':self.death0
            }
     
 
@@ -336,12 +365,11 @@ class SEIRDBase(Model):
     def y0(self, **args):
         return self.z0(**args)
 
-    
+
     def y(self, samples, **args):
         '''Get cumulative cases from incident ones'''
         
         dy = self.dy(samples, **args)
-        
         y0 = np.zeros(dy.shape[0])
         if args.get('forecast'):
             y0 = self.y(samples, forecast=False)[:,-1]
@@ -357,7 +385,6 @@ class SEIRDBase(Model):
         '''Get cumulative deaths from incident ones'''
         
         dz = self.dz(samples, **args)
-        
         z0 = np.zeros(dz.shape[0])
         if args.get('forecast'):
             z0 = self.z(samples, forecast=False)[:,-1]

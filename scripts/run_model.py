@@ -9,12 +9,13 @@ from run_util import load_config, get_method
 import data_cleaning
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description='Run forecast model for one location.')
 
     parser.add_argument('place', help='location (e.g., US state)')
     
     parser.add_argument('--config_file', help='configuration file (default: config.json)', default='config.json')    
+    parser.add_argument('--use_hosp_as_death', help="Use hospitalizations as deaths", dest='use_hosp_as_death', action='store_true')
+    parser.set_defaults(use_hosp_as_death=False)
     parser.add_argument('--start', help='start date', default='2020-03-04')
     parser.add_argument('--end', help='end date (i.e., forecast date)', default=None)
     parser.add_argument('--prefix', help='path prefix for saving results', default='results')
@@ -28,6 +29,10 @@ if __name__ == "__main__":
 
     config = load_config(args.config_file)
     model_config = config['model_configs'][args.model_config]
+    if ('use_hosp_as_death' in model_config):
+      use_hosp_as_death = model_config['use_hosp_as_death']
+    else:
+      use_hosp_as_death = False
     model_type = get_method(model_config['model'])
     forecast_date = args.end
 
@@ -38,6 +43,7 @@ if __name__ == "__main__":
     if args.run:
         util.run_place(data,
                        args.place,
+                       use_hosp_as_death = use_hosp_as_death,
                        start=args.start,
                        end=forecast_date,
                        prefix=args.prefix,
@@ -46,6 +52,7 @@ if __name__ == "__main__":
     
     util.gen_forecasts(data,
                        args.place,
+                       use_hosp_as_death = use_hosp_as_death,
                        start=args.start,
                        prefix=args.prefix,
                        model_type=model_type,
