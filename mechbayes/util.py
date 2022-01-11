@@ -441,11 +441,11 @@ def gen_forecasts(data,
     
     model = model_type()
 
-    confirmed = data[place]['data'].confirmed#[start:end]
+    confirmed = data[place]['data'].confirmed[start:end]
     if use_hosp_as_death:
-        death = data[place]['data'].hospitalization#[start:end]
+        death = data[place]['data'].hospitalization[start:end]
     else:
-        death = data[place]['data'].death#[start:end]
+        death = data[place]['data'].death[start:end]
 
     T = len(confirmed)
     N = data[place]['pop']
