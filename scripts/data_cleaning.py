@@ -83,6 +83,9 @@ def clean(data, forecast_date):
 
     # OK reports cases daily, but deaths once/week
     util.smooth_to_weekly(data, forecast_date, 'OK', 'death',     '2021-03-24')
+    # 01-16 TN moves to report weekly (Nutcha to uncomment and edit with new data)
+    #util.smooth_to_weekly(data, forecast_date, 'TN', 'confirmed', '2022-01-12')
+    #util.smooth_to_weekly(data, forecast_date, 'TN', 'death',     '2022-01-12')
 
     # Manual adjustment for OK after redistributing to weekly
     # util.redistribute(data['OK']['data'], '2021-10-20', 163 - 40, 365, 'death')
@@ -91,22 +94,56 @@ def clean(data, forecast_date):
     # data['OK']['data']['death'][forecast_date - pd.Timedelta("11d"):] = onp.nan
 
     # OH death data is delayed, so recent weeks always appear as zeros. 
+    
+    # Nutcha to check if it should be reinstated
     # Set trailing two weeks to missing
-    data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
+    #data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
 
     # MD case/death data issues
-    data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("18d"):] = onp.nan
-    # data['MD']['data']['death'][forecast_date - pd.Timedelta("21d"):] = onp.nan
+    #data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("18d"):] = onp.nan
+    # data['MD']['data']['death'][forecast_date - pd.Timedelta("21d"):] = onp.nan (shoud stay commented out)
 
     # KY reporting around new year's
-    data['KY']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
-    data['KY']['data']['death'][forecast_date - pd.Timedelta("3d"):] = onp.nan
-
-
-
+    #data['KY']['data']['confirmed'][forecast_date - pd.Timedelta("3d"):] = onp.nan
+    #data['KY']['data']['death'][forecast_date - pd.Timedelta("3d"):] = onp.nan
+    
+    # MS last two days are nas
+    data['MS']['data']['confirmed'][forecast_date - pd.Timedelta("1d"):] = onp.nan
+    data['MS']['data']['death'][forecast_date - pd.Timedelta("1d"):] = onp.nan
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+    # adjustments for some states, some might not be that important but just to be safe
+    util.redistribute(data['AK']['data'], '2022-01-07', 1800, 1, 'confirmed')
+    util.redistribute(data['AK']['data'], '2022-01-10', 2000, 2, 'confirmed')
+    util.redistribute(data['AK']['data'], '2022-01-12', 2000, 1, 'confirmed')
+    util.redistribute(data['AK']['data'], '2022-01-14', 2500, 1, 'confirmed')
+    # MN case spike affects death
+    util.redistribute(data['MN']['data'], '2022-01-04', 1000, 1, 'confirmed')
+    util.redistribute(data['MN']['data'], '2022-01-04', 1000, -1, 'confirmed')
+    util.redistribute(data['MN']['data'], '2022-01-04', 7000, -3, 'confirmed')
+    util.redistribute(data['MN']['data'], '2022-01-11', 2000, 1, 'confirmed')
+    util.redistribute(data['MN']['data'], '2022-01-11', 13000, -3, 'confirmed')
+    # fix VT death spike
+    util.redistribute(data['MN']['data'], '2022-01-11', 3300, 2, 'confirmed')
+    # fix OH case spike that affects death
+    util.redistribute(data['OH']['data'], '2022-01-02', 18000, 1, 'confirmed')
+    util.redistribute(data['OH']['data'], '2022-01-14', 20000, 14, 'confirmed')
+    util.redistribute(data['OH']['data'], '2022-01-15', 22000, 7, 'confirmed')
+    # fix MS spike
+    util.redistribute(data['MS']['data'], '2022-01-03', 17525-4500, 3, 'confirmed')
+    util.redistribute(data['MS']['data'], '2022-01-11', 22221-8000, 3, 'confirmed')
+    # KY adjustments
+    util.redistribute(data['KY']['data'], '2022-01-03', 22912-6000, 4, 'confirmed')
+    util.redistribute(data['KY']['data'], '2022-01-05', 3000, -7, 'confirmed')
+    util.redistribute(data['KY']['data'], '2022-01-06', 3000, 7, 'confirmed')
+    util.redistribute(data['KY']['data'], '2022-01-07', 2000, -2, 'confirmed')
+    util.redistribute(data['KY']['data'], '2022-01-07', 1000, 1, 'confirmed')
+    util.redistribute(data['KY']['data'], '2022-01-10', 16671-7000, 2, 'confirmed')
+    util.redistribute(data['KY']['data'], '2022-01-11', 2000, 3, 'confirmed')
+    util.redistribute(data['KY']['data'], '2022-01-12', 2000, 4, 'confirmed')
+    
+    # forecast date 2022-01-9 
     util.redistribute(data['WA']['data'], '2022-01-03', 33069-10000, 3, 'confirmed')
     util.redistribute(data['WA']['data'], '2021-12-27', 20494-5000, 3, 'confirmed')
 
