@@ -96,7 +96,8 @@ def clean(data, forecast_date):
     # OH death data is delayed, so recent weeks always appear as zeros. 
     
     # Set trailing two weeks to missing
-    data['OH']['data']['death'][forecast_date - pd.Timedelta("1d"):] = onp.nan
+    # NEEDS UPDATE ON 2022-01-30
+    data['OH']['data']['death'][forecast_date - pd.Timedelta("4d"):] = onp.nan
 
     # MD case/death data issues
     #data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("18d"):] = onp.nan
@@ -120,6 +121,13 @@ def clean(data, forecast_date):
 
 def make_manual_adjustments(data, forecast_date):
     '''Adjustments for one-off irregularities'''
+    
+    # https://www.alaskapublic.org/2022/01/19/the-number-of-alaskan-covid-deaths-now-tops-1000/
+    # 61 of 63 deaths reported on 2022-01-29 occurred before New Year
+    # AK published deaths once per month
+    data['AK']['data'].loc['2022-01-01':'2022-01-18','death'] += 61
+    util.redistribute(data['AK']['data'], '2022-01-01', 61, 30, 'death')
+
     # adjustments for some states, some might not be that important but just to be safe
     util.redistribute(data['AK']['data'], '2022-01-07', 1800, 1, 'confirmed')
     util.redistribute(data['AK']['data'], '2022-01-10', 2000, 2, 'confirmed')
@@ -137,9 +145,11 @@ def make_manual_adjustments(data, forecast_date):
     util.redistribute(data['OH']['data'], '2022-01-02', 18000, 1, 'confirmed')
     util.redistribute(data['OH']['data'], '2022-01-14', 20000, 14, 'confirmed')
     util.redistribute(data['OH']['data'], '2022-01-15', 22000, 7, 'confirmed')
-    util.redistribute(data['OH']['data'], '2022-01-08', 25, 2, 'death')
-    util.redistribute(data['OH']['data'], '2022-01-09', 15, 5, 'death')
-    util.redistribute(data['OH']['data'], '2022-01-14', 487-70, 6, 'death')
+    # NEEDS UPDATE ON 2022-01-30
+    #util.redistribute(data['OH']['data'], '2022-01-08', 25, 2, 'death')
+    #util.redistribute(data['OH']['data'], '2022-01-09', 15, 5, 'death')
+    #util.redistribute(data['OH']['data'], '2022-01-14', 487-70, 6, 'death')
+
     # fix MS spike
     util.redistribute(data['MS']['data'], '2022-01-03', 17525-4500, 3, 'confirmed')
     util.redistribute(data['MS']['data'], '2022-01-11', 22221-8000, 3, 'confirmed')
