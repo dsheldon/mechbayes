@@ -97,7 +97,7 @@ def clean(data, forecast_date):
     
     # Set trailing two weeks to missing
     # NEEDS UPDATE ON 2022-01-30
-    data['OH']['data']['death'][forecast_date - pd.Timedelta("4d"):] = onp.nan
+    data['OH']['data']['death'][forecast_date - pd.Timedelta("2w"):] = onp.nan
 
     # MD case/death data issues
     #data['MD']['data']['confirmed'][forecast_date - pd.Timedelta("18d"):] = onp.nan
