@@ -124,9 +124,10 @@ def make_manual_adjustments(data, forecast_date):
     
     ## redistributing some VA deaths based on DPH press release
     ## https://www.vdh.virginia.gov/news/2022-news-releases/omicron-surge-in-cases-leads-to-increase-in-covid-19-associated-deaths-being-added-to-the-virginia-department-of-health-covid-19-dashboards/
-    util.redistribute(data['VA']['data'], '2022-02-02', 100, 30, 'death')
-    util.redistribute(data['VA']['data'], '2022-02-03', 100, 30, 'death')
-    util.redistribute(data['VA']['data'], '2022-02-04', 100, 30, 'death')
+    ## NGR: on second thought, didn't implement these b/c it's unclear that they would ever be propogated to ground truth data.
+    # util.redistribute(data['VA']['data'], '2022-02-02', 100, 30, 'death')
+    # util.redistribute(data['VA']['data'], '2022-02-03', 100, 30, 'death')
+    # util.redistribute(data['VA']['data'], '2022-02-04', 100, 30, 'death')
 
 
     # https://www.alaskapublic.org/2022/01/19/the-number-of-alaskan-covid-deaths-now-tops-1000/
