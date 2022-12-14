@@ -298,7 +298,7 @@ class SEIRD(SEIRDBase):
                                 num_steps=T-1,
                                 num_frozen=num_frozen)
         
-        beta = numpyro.deterministic("beta", beta0 * np.exp(rw_scale*rw))
+        beta = numpyro.deterministic("beta" + suffix, beta0 * np.exp(rw_scale*rw))
         
         det_prob = numpyro.sample("det_prob" + suffix,
                                   LogisticRandomWalk(loc=det_prob0, 
